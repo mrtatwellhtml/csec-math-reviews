@@ -1,0 +1,924 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><title>Ruler and Compass Constructions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: drafting-desk tool. Left = construction index, centre = drawing sheet + caption + transport controls, right = steps and practice. */
+:root{
+  --bg:#e9eef3; --surface:#ffffff; --surface-2:#f4f7fa; --line:#d3dbe4; --text:#18222e; --muted:#5a6878;
+  --navy:#1c3557; --navy-ink:#ffffff; --accent:#c8302c;
+  --paper:#fbfcfd; --grid:#e6ecf2; --ink:#1d2733; --con:#2563c9; --res:#c8302c; --halo:#fbfcfd;
+  --ruler:rgba(214,232,244,.78); --ruler-edge:#6f8aa3; --ruler-ink:#22384f;
+  --prot:rgba(225,240,236,.78); --prot-edge:#5f8c80; --prot-ink:#1f3b35;
+  --metal:#9aa4ae; --metal-dark:#56606b; --wood:#e8c896; --pencil:#e3b23c; --lead:#2b2b2b; --eraser:#e29aa0;
+  --mag-ring:#1c3557; --chip:#eef3f8;
+  --f-display:"Spectral", "Times New Roman", Georgia, serif;
+  --f-ui:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0e141a; --surface:#151d26; --surface-2:#1a2430; --line:#2a3644; --text:#e6edf4; --muted:#97a6b6;
+  --navy:#24466f; --navy-ink:#ffffff; --accent:#ff6b62;
+  --paper:#1a222b; --grid:#25303c; --ink:#e9eff5; --con:#74a7ff; --res:#ff6f66; --halo:#1a222b;
+  --ruler:rgba(70,98,124,.72); --ruler-edge:#9db6cd; --ruler-ink:#eaf3fb;
+  --prot:rgba(64,104,94,.72); --prot-edge:#9cc9bd; --prot-ink:#eafaf5;
+  --metal:#a7b1bb; --metal-dark:#6d7884; --mag-ring:#9cc1ff; --chip:#1f2a36; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --surface:#151d26; --surface-2:#1a2430; --line:#2a3644; --text:#e6edf4; --muted:#97a6b6;
+  --navy:#24466f; --navy-ink:#ffffff; --accent:#ff6b62;
+  --paper:#1a222b; --grid:#25303c; --ink:#e9eff5; --con:#74a7ff; --res:#ff6f66; --halo:#1a222b;
+  --ruler:rgba(70,98,124,.72); --ruler-edge:#9db6cd; --ruler-ink:#eaf3fb;
+  --prot:rgba(64,104,94,.72); --prot-edge:#9cc9bd; --prot-ink:#eafaf5;
+  --metal:#a7b1bb; --metal-dark:#6d7884; --mag-ring:#9cc1ff; --chip:#1f2a36; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--f-ui);font-size:15px;line-height:1.5;padding:0 16px 24px}
+button,input,select{font:inherit;color:inherit}
+.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding-block:16px 12px}
+.top h1{font-family:var(--f-display);font-weight:700;font-size:1.65rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.top .sub{color:var(--muted);font-size:.92rem}
+.app{display:grid;grid-template-columns:250px minmax(0,1fr) 320px;gap:16px;align-items:start}
+@media (max-width:1180px){.app{grid-template-columns:220px minmax(0,1fr)} .side{grid-column:1 / -1}}
+@media (max-width:760px){.app{grid-template-columns:minmax(0,1fr)} .main{order:1} .menu{order:2;position:static;max-height:300px} .side{order:3} .top h1{font-size:1.35rem}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+/* menu */
+.menu{padding:10px 8px;position:sticky;top:env(safe-area-inset-top,0px);max-height:calc(100vh - 24px);overflow:auto}
+.menu h3{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:12px 8px 4px;font-weight:600}
+.menu h3:first-child{margin-top:4px}
+.menu button{display:flex;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:.88rem;line-height:1.3}
+.menu button .n{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);min-width:1.6em;padding-top:1px}
+.menu button:hover{background:var(--surface-2)}
+.menu button[aria-current="true"]{background:var(--navy);color:var(--navy-ink)}
+.menu button[aria-current="true"] .n{color:var(--navy-ink);opacity:.8}
+.menu button:focus-visible,.ctl:focus-visible,.steps button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* stage */
+.main{display:flex;flex-direction:column;gap:12px;min-width:0}
+.head{padding:12px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.kicker{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.head h2{font-family:var(--f-display);font-size:1.45rem;margin:2px 0 0;line-height:1.2;text-wrap:balance}
+.legend{display:flex;gap:12px;font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid}
+.stage{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--paper)}
+.stage svg{display:block;width:100%;height:auto;aspect-ratio:16/10;max-width:100%}
+.badge{position:absolute;left:12px;top:12px;background:var(--navy);color:var(--navy-ink);font-size:.78rem;padding:4px 10px;border-radius:999px;font-weight:600}
+.done{position:absolute;right:12px;top:12px;background:var(--surface);border:1px solid var(--line);font-size:.8rem;padding:4px 10px;border-radius:999px}
+.caption{padding:14px 16px;display:grid;gap:6px}
+.caption .stepno{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.caption .steptext{font-family:var(--f-display);font-size:1.25rem;line-height:1.35}
+.caption .now{display:flex;gap:10px;align-items:flex-start;background:var(--chip);border-radius:8px;padding:8px 12px;font-size:1rem;min-height:2.6em}
+.caption .now b{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding-top:3px;white-space:nowrap}
+.controls{padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.transport{display:flex;gap:6px;flex-wrap:wrap}
+.ctl{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:7px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:.9rem}
+.ctl:hover{border-color:var(--muted)}
+.ctl.primary{background:var(--navy);color:var(--navy-ink);border-color:var(--navy);min-width:7.5em;justify-content:center;font-weight:600}
+.ctl svg{width:15px;height:15px;fill:currentColor}
+.opts{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:.88rem}
+.speed{display:flex;align-items:center;gap:8px}
+.speed output{font-family:var(--f-mono);min-width:3.2em;font-size:.85rem}
+.speed input{width:130px;accent-color:var(--navy)}
+.opts label.ck{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.opts input[type=checkbox]{accent-color:var(--navy);width:16px;height:16px}
+.keys{font-size:.78rem;color:var(--muted);padding:0 4px}
+kbd{font-family:var(--f-mono);font-size:.72rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--surface)}
+/* side */
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.box{padding:12px 14px}
+.box h4{margin:0 0 8px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:4px;counter-reset:s}
+.steps button{display:grid;grid-template-columns:1.8em 1fr;gap:6px;text-align:left;width:100%;background:none;border:1px solid transparent;border-radius:7px;padding:6px 8px;cursor:pointer;font-size:.9rem;line-height:1.4}
+.steps button:hover{background:var(--surface-2)}
+.steps .num{font-family:var(--f-mono);font-size:.78rem;width:1.6em;height:1.6em;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--muted)}
+.steps li.cur button{border-color:var(--navy);background:var(--chip)}
+.steps li.cur .num{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+.steps li.past .num{background:var(--res);color:#fff;border-color:var(--res)}
+.steps li.past button{color:var(--muted)}
+.key{border-left:3px solid var(--accent);padding:2px 0 2px 10px;font-family:var(--f-display);font-size:1rem;margin:0}
+.turn{background:var(--navy);color:var(--navy-ink);border-radius:10px 10px 0 0;padding:8px 14px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.turnbody{padding:10px 14px 12px;display:grid;gap:8px}
+.turnbody p{margin:0}
+.turnbody .q{font-weight:600}
+.turnbody .chk{color:var(--muted);font-size:.9rem}
+.reveal{justify-self:start}
+.ans{font-family:var(--f-mono);font-size:.88rem;background:var(--chip);border-radius:6px;padding:8px 10px}
+.tips{margin:0;padding-left:18px;font-size:.88rem;display:grid;gap:3px}
+/* svg classes */
+.paper{fill:var(--paper)} .gridl{stroke:var(--grid);stroke-width:.02}
+.k-given{stroke:var(--ink);stroke-width:.05;fill:none;stroke-linecap:round}
+.k-con{stroke:var(--con);stroke-width:.035;fill:none;stroke-linecap:round}
+.k-res{stroke:var(--res);stroke-width:.06;fill:none;stroke-linecap:round}
+.k-guide{stroke:var(--con);stroke-width:.03;fill:none;stroke-dasharray:.18 .14}
+.dot{fill:var(--ink)}
+.lbl{font-family:var(--f-display);font-style:italic;font-weight:600;font-size:.55px;fill:var(--ink);paint-order:stroke;stroke:var(--halo);stroke-width:.14px;stroke-linejoin:round}
+.alb{font-family:var(--f-ui);font-size:.4px;fill:var(--res);font-weight:600;paint-order:stroke;stroke:var(--halo);stroke-width:.12px}
+.r-body{fill:var(--ruler);stroke:var(--ruler-edge);stroke-width:.03}
+.r-tick{stroke:var(--ruler-ink);stroke-width:.018}
+.r-num{font-family:var(--f-ui);font-size:.36px;fill:var(--ruler-ink);text-anchor:middle}
+.r-edge{stroke:var(--ruler-ink);stroke-width:.03}
+.p-body{fill:var(--prot);stroke:var(--prot-edge);stroke-width:.03}
+.p-tick{stroke:var(--prot-ink);stroke-width:.015}
+.p-num{font-family:var(--f-ui);font-size:.27px;fill:var(--prot-ink);text-anchor:middle;dominant-baseline:middle}
+.p-num.o{font-size:.22px;opacity:.75}
+.p-read{stroke:var(--res);stroke-width:.05;stroke-linecap:round}
+.metal{fill:var(--metal);stroke:var(--metal-dark);stroke-width:.025}
+.needle{stroke:var(--metal-dark);stroke-width:.05;stroke-linecap:round}
+.pencil{fill:var(--pencil);stroke:#8a6a17;stroke-width:.02}
+.wood{fill:var(--wood);stroke:#8a6a17;stroke-width:.02}
+.lead{fill:var(--lead)}
+.eraser{fill:var(--eraser);stroke:#8a5a5e;stroke-width:.02}
+.mag-ring{fill:none;stroke:var(--mag-ring);stroke-width:.07}
+.mag-lead{stroke:var(--mag-ring);stroke-width:.03;stroke-dasharray:.12 .08}
+.mag-bg{fill:var(--paper)}
+.mag-tag{fill:var(--mag-ring)}
+.mag-txt{font-family:var(--f-mono);font-size:.42px;fill:var(--paper);text-anchor:middle;dominant-baseline:middle;font-weight:500}
+.tip-dot{fill:var(--res)}
+@media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto} }
+</style>
+
+<div class="top">
+  <h1>Ruler and Compass Constructions</h1>
+  <span class="sub">Animated companion to the CSEC Geometric Constructions Workbook: every step, every tool movement.</span>
+</div>
+
+<div class="app">
+  <nav class="menu panel" id="menu" aria-label="Constructions"></nav>
+
+  <section class="main">
+    <div class="panel head">
+      <div><div class="kicker" id="kicker"></div><h2 id="ctitle"></h2></div>
+      <div class="legend" aria-label="Colour key">
+        <span><i style="border-color:var(--ink)"></i>Given</span>
+        <span><i style="border-color:var(--con)"></i>Construction arcs</span>
+        <span><i style="border-color:var(--res)"></i>Result</span>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <svg id="svg" viewBox="0 0 16 10" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animated construction">
+        <defs><clipPath id="magclip"><circle id="magclipc" cx="0" cy="0" r="1.9"/></clipPath></defs>
+        <g id="world">
+          <g id="bg"></g>
+          <g id="els"></g>
+          <g id="tools"></g>
+        </g>
+        <g id="mag"></g>
+      </svg>
+      <div class="badge" id="badge"></div>
+      <div class="done" id="donechip" hidden></div>
+    </div>
+    <div class="panel caption" aria-live="polite">
+      <div class="stepno" id="stepno"></div>
+      <div class="steptext" id="steptext"></div>
+      <div class="now"><b>Now</b><span id="now"></span></div>
+    </div>
+    <div class="panel controls">
+      <div class="transport">
+        <button class="ctl" id="bRestart" title="Restart (R)"><svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 1-4.6 3H1.6A6.5 6.5 0 1 0 3.3 3.4L2 2v4h4L4.4 4.4A5 5 0 0 1 8 3z"/></svg>Restart</button>
+        <button class="ctl" id="bPrev" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg>Step back</button>
+        <button class="ctl primary" id="bPlay" title="Play or pause (Space)"></button>
+        <button class="ctl" id="bNext" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg>Next step</button>
+      </div>
+      <div class="opts">
+        <div class="speed"><label for="speed">Speed</label><input type="range" id="speed" min="0" max="6" step="1" value="3"><output id="speedOut">1×</output></div>
+        <label class="ck"><input type="checkbox" id="pauseEach" checked>Pause after each step</label>
+        <label class="ck"><input type="checkbox" id="showMag" checked>Magnifier</label>
+      </div>
+    </div>
+    <div class="keys">Keys: <kbd>Space</kbd> play / pause · <kbd>→</kbd> next step · <kbd>←</kbd> step back · <kbd>R</kbd> restart. Click any step on the right to jump to it.</div>
+  </section>
+
+  <aside class="side">
+    <div class="panel box"><h4>Steps</h4><ol class="steps" id="steps"></ol></div>
+    <div class="panel box" id="keybox"><h4>Key idea</h4><p class="key" id="keyidea"></p></div>
+    <div class="panel" id="turnbox">
+      <div class="turn" id="turnhead">Your turn · ruler, pencil and compasses only</div>
+      <div class="turnbody">
+        <p class="q" id="turnq"></p>
+        <p class="chk" id="turnchk"></p>
+        <button class="ctl reveal" id="bAns">Show expected answer</button>
+        <div class="ans" id="ans" hidden></div>
+      </div>
+    </div>
+    <div class="panel box"><h4>Good habits</h4>
+      <ul class="tips">
+        <li>Use a sharp pencil; thick lines lose marks.</li>
+        <li>Keep every arc and construction line. Do not rub them out.</li>
+        <li>Measure lengths to the nearest mm and angles to the nearest degree.</li>
+        <li>“Same radius” means do not touch the compass screw or legs.</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+(()=>{
+"use strict";
+/* ================= geometry ================= */
+const D2R=Math.PI/180;
+const V=(x,y)=>({x,y});
+const add=(a,b)=>V(a.x+b.x,a.y+b.y), sub=(a,b)=>V(a.x-b.x,a.y-b.y), mul=(a,k)=>V(a.x*k,a.y*k);
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const angOf=(a,b)=>Math.atan2(b.y-a.y,b.x-a.x)/D2R;
+const polar=(c,r,d)=>V(c.x+r*Math.cos(d*D2R),c.y+r*Math.sin(d*D2R));
+const lerp=(a,b,t)=>a+(b-a)*t;
+function cci(c1,r1,c2,r2){const d=dist(c1,c2),a=(r1*r1-r2*r2+d*d)/(2*d),h=Math.sqrt(Math.max(0,r1*r1-a*a));
+  const u=mul(sub(c2,c1),1/d),m=add(c1,mul(u,a)),n=V(-u.y,u.x);return [add(m,mul(n,h)),add(m,mul(n,-h))];}
+function far(pts,from){return dist(pts[0],from)>dist(pts[1],from)?pts[0]:pts[1];}
+function near(pts,from){return dist(pts[0],from)<dist(pts[1],from)?pts[0]:pts[1];}
+function lli(p1,p2,p3,p4){const d=(p1.x-p2.x)*(p3.y-p4.y)-(p1.y-p2.y)*(p3.x-p4.x);
+  const t=((p1.x-p3.x)*(p3.y-p4.y)-(p1.y-p3.y)*(p3.x-p4.x))/d;return add(p1,mul(sub(p2,p1),t));}
+function angAt(v,a,b){let d=Math.abs(angOf(v,a)-angOf(v,b))%360;return d>180?360-d:d;}
+const f1=x=>(Math.round(x*10)/10).toFixed(1);
+const f2=x=>(Math.round(x*100)/100).toFixed(2);
+const fd=x=>Math.round(x)+"°";
+const cosRule=(b,c,A)=>Math.sqrt(b*b+c*c-2*b*c*Math.cos(A*D2R));
+const angCos=(a,b,c)=>Math.acos((b*b+c*c-a*a)/(2*b*c))/D2R; // angle opposite a
+const T=p=>[p.x,-p.y];
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+
+/* ================= scene + actions ================= */
+function newScene(){return {els:[],say:"",
+  tools:{ruler:{x:0,y:0,ang:0,side:1,o:0},compass:{x:0,y:0,r:3,ang:20,o:0},pencil:{x:0,y:0,o:0},prot:{x:0,y:0,ang:0,flip:1,o:0,read:null}},
+  mag:{o:0,px:0,py:0,off:null,text:"",follow:null}};}
+let CTX=null;
+function act(dur,say,init,upd,o={}){return {dur,say,init:init||(()=>{}),upd:upd||(()=>{}),lin:!!o.lin};}
+const hold=(ms,say)=>act(ms,say);
+function tween(tool,target,dur,say){let from;return act(dur,say,S=>{const tl=S.tools[tool];from={...tl};
+    if(tl.o<0.05&&!("o" in target&&target.o===0)){Object.assign(tl,target);for(const k in target)from[k]=target[k];from.o=0;}
+    for(const k in target){if(typeof target[k]!=="number")tl[k]=target[k];}},
+  (S,t)=>{const tl=S.tools[tool];for(const k in target){const b=target[k];if(typeof b!=="number")continue;let a=from[k];
+      if(k==="ang"){const d=((b-a)%360+540)%360-180;tl[k]=a+d*t;}else tl[k]=lerp(a,b,t);}
+    if(!("o" in target))tl.o=lerp(from.o,1,t);});}
+const fade=(tool,ms=450)=>tween(tool,{o:0},ms);
+function pt(p,label,dir=45,dist_=.5){let el;return act(380,null,S=>{el={t:"pt",p,label,dir,d:dist_,o:0};S.els.push(el);},(S,t)=>{el.o=t;});}
+function drawLine(a,b,kind,o={}){let el;const L=dist(a,b);return act(500+L*170,o.say||"Slide the pencil along the edge of the ruler, pressing lightly and evenly.",
+  S=>{el={t:"line",a,b,p:0,kind,dash:o.dash};S.els.push(el);S.tools.pencil.o=1;},
+  (S,t)=>{el.p=t;const q=add(a,mul(sub(b,a),t));S.tools.pencil.x=q.x;S.tools.pencil.y=q.y;},{lin:true});}
+const pencilTo=(p,say)=>tween("pencil",{x:p.x,y:p.y},650,say);
+function magShow(p,text,off){return act(450,null,S=>{const m=S.mag;m.px=p.x;m.py=p.y;m.text=text;m.off=off||null;m.follow=null;m.from=m.o;},(S,t)=>{S.mag.o=lerp(S.mag.from,1,t);});}
+function magFollow(kind,off){return act(400,null,S=>{const m=S.mag;m.follow=kind;m.off=off||null;m.from=m.o;},(S,t)=>{S.mag.o=lerp(S.mag.from,1,t);});}
+const magHide=()=>act(350,null,S=>{S.mag.from=S.mag.o;},(S,t)=>{S.mag.o=S.mag.from*(1-t);if(t>=1)S.mag.follow=null;});
+function angMark(v,a0,a1,text,r=.85){let el;return act(450,null,S=>{el={t:"ang",v,a0,a1,text,r,o:0};S.els.push(el);},(S,t)=>{el.o=t;});}
+function sq(v,a0){let el;return act(350,null,S=>{el={t:"sq",v,a0,o:0};S.els.push(el);},(S,t)=>{el.o=t;});}
+
+/* ---- ruler ---- */
+function align(a,b){let ang=angOf(a,b),p0=a,flip=false;const c=Math.cos(ang*D2R),s=Math.sin(ang*D2R);
+  if(c<-1e-6||(Math.abs(c)<=1e-6&&s<0)){ang=angOf(b,a);p0=b;flip=true;}return {p0,ang,flip};}
+function autoSide(p0,ang){const n=V(-Math.sin(ang*D2R),Math.cos(ang*D2R));const c=CTX.centre;const d=(c.x-p0.x)*n.x+(c.y-p0.y)*n.y;return d>0.05?-1:1;}
+const rulerAt=(p0,ang,side,say)=>tween("ruler",{x:p0.x,y:p0.y,ang,side},1000,say);
+
+function line(a,b,kind="res",o={}){const al=align(a,b);let p0=al.p0;
+  if(o.zeroBefore){p0=add(p0,polar(V(0,0),-0.6,al.ang));}
+  const side=o.side??autoSide(al.p0,al.ang);
+  return [rulerAt(p0,al.ang,side,o.say1||`Place the ruler so that its edge passes exactly through ${o.through||"both points"}.`),
+    hold(500,"Hold the ruler firmly with your fingers spread so it cannot slide."),
+    pencilTo(a,o.say2||"Put the pencil point on the paper, touching the edge of the ruler."),
+    drawLine(a,b,kind,{say:o.say3,dash:o.dash}),fade("pencil",350),o.keep?[]:fade("ruler")];}
+
+function seg(a,dir,len,nA,nB,kind="res",dA=225,dB=-45,o={}){const b=polar(a,len,dir);const side=o.side??autoSide(a,dir);
+  return [o.skipA?[]:pt(a,nA,dA),
+    rulerAt(a,dir,side,`Place the 0 mark of the ruler exactly on ${nA} (not the end of the ruler).`),
+    magShow(a,"0 on "+nA,o.offA),hold(1300,`Check that the 0 line sits exactly on ${nA}.`),
+    magShow(b,`${f1(len)} cm`,o.offB),hold(1500,`Find ${f1(len)} cm on the scale: ${Math.floor(len+1e-9)} big (cm) marks${Math.round((len%1)*10)?` and ${Math.round((len%1)*10)} small (mm) marks`:""}.`),
+    pencilTo(b,`Make a small, sharp mark at ${f1(len)} cm.`),pt(b,nB,dB),magHide(),
+    pencilTo(a,`Move the pencil back to ${nA}.`),
+    drawLine(a,b,kind,{say:`Draw ${nA}${nB} along the edge of the ruler.`}),fade("pencil",350),fade("ruler")];}
+
+function measure(a,b,name,o={}){const al=align(a,b);const L=dist(a,b);const side=o.side??autoSide(al.p0,al.ang);
+  const n0=al.flip?name[name.length-1]:name[0];const n1=al.flip?name[0]:name[name.length-1];const other=al.flip?a:b;
+  return [fade("compass",300),rulerAt(al.p0,al.ang,side,`To measure ${name}: put the 0 mark of the ruler on ${n0}.`),
+    magShow(al.p0,"0 on "+n0,o.off0),hold(1200,`Make sure the edge runs through both ${n0} and ${n1}.`),
+    magShow(other,`${f1(L)} cm`,o.off1),hold(2000,`Read the scale at ${n1}: ${name} = ${f1(L)} cm (nearest mm).`),
+    magHide(),fade("ruler")];}
+
+/* ---- compasses ---- */
+function openTo(r,say){let r0;return act(900+Math.min(1800,180*10),say,S=>{r0=S.tools.compass.r;},(S,t)=>{S.tools.compass.r=lerp(r0,r,t);});}
+const hsOf=a=>Math.cos(a*D2R)>=-1e-6?1:-1;
+const compassAt=(c,ang,say)=>tween("compass",{x:c.x,y:c.y,ang,hs:hsOf(ang)},950,say);
+function setR(r,why){const Z=CTX.zone;return [fade("pencil",200),
+  rulerAt(Z,0,-1,"Lay the ruler flat on the paper, away from your drawing, to set the compasses."),
+  compassAt(Z,0,"Put the compass point exactly on the 0 mark of the ruler."),
+  magFollow("compass",V(1.6,3.1)),
+  openTo(r,why||`Open the compasses until the pencil point is exactly on ${f1(r)} cm.`),
+  hold(1300,`The compasses are now set to ${f1(r)} cm. Do not change this until the steps say so.`),
+  magHide(),fade("ruler")];}
+function swing(c,a0,a1,kind,say){let el;return act(Math.max(700,Math.abs(a1-a0)*16),say||"Turn the compasses by the handle at the top so the pencil draws the arc.",
+  S=>{el={t:"arc",c,r:S.tools.compass.r,a0,a1,p:0,kind};S.els.push(el);S.tools.compass.hs=Math.abs(a1-a0)>=300?1:hsOf((a0+a1)/2);},
+  (S,t)=>{el.p=t;const cp=S.tools.compass;cp.ang=lerp(a0,a1,t);cp.x=c.x;cp.y=c.y;},{lin:true});}
+function arcAt(c,name,a0,a1,kind="con",o={}){const hs=Math.abs(a1-a0)>=300?1:hsOf((a0+a1)/2);return [tween("compass",{x:c.x,y:c.y,ang:a0,hs},950,o.place||`Put the compass point on ${name}. Press it in gently so it cannot slip.`),swing(c,a0,a1,kind,o.swing)];}
+function arcThru(c,name,target,spread=13,kind="con",o={}){const a=angOf(c,target);return arcAt(c,name,a-spread,a+spread,kind,o);}
+function fitR(c,p,nc,np){return [compassAt(c,angOf(c,p),`Put the compass point on ${nc}.`),openTo(dist(c,p),`Open the compasses until the pencil point just touches ${np}.`)];}
+
+/* ---- protractor ---- */
+function protMeasure(v,aBase,aOther,name,o={}){let th=((aOther-aBase)%360+360)%360,flip=1;if(th>180){th=360-th;flip=-1;}
+  const val=Math.round(th);let ang=aBase,f=flip,r0=0,r1=th,outer=false;
+  if(Math.cos(aBase*D2R)<-1e-6){ang=aBase+180;f=-flip;r0=180;r1=180-th;outer=true;}
+  return [fade("compass",300),fade("ruler",300),fade("pencil",200),
+    tween("prot",{x:v.x,y:v.y,ang,flip:f,read:null},1100,`Put the centre mark of the protractor exactly on the vertex${o.vname?" "+o.vname:""}.`),
+    hold(1300,"Turn the protractor so that its 0° line lies exactly along one arm of the angle."),
+    act(1600,outer?"This arm is on the 0° of the INNER scale (the smaller numbers), so count round the inner numbers to the other arm.":"This arm is on the 0° of the OUTER scale, so count round the outer numbers to the other arm.",S=>{S.tools.prot.read=r0;S.tools.prot.r0=r0;},(S,t)=>{S.tools.prot.read=lerp(r0,r1,t);}),
+    magShow(polar(v,outer?3.8:4.3,aBase+flip*th),`${val}°`,o.off||polar(V(0,0),2.7,aBase+flip*th)),
+    hold(2100,`The other arm crosses the scale at ${val}°. So ${name} = ${val}°.`+(val>90?" It is obtuse, so the reading must be more than 90°.":val<90?" It is acute, so the reading must be less than 90°.":" It is a right angle.")),
+    magHide(),tween("prot",{o:0,read:null},500)];}
+
+/* ---- composite constructions ---- */
+function bisectGeom(v,a1,a2,r1,r2){const P=polar(v,r1,a1),Q=polar(v,r1,a2);const R=far(cci(P,r2,Q,r2),v);return {P,Q,R};}
+
+/* ================= construction library ================= */
+const LIB=[];
+function def(o){LIB.push(o);}
+const step=(t,...a)=>({t,a:a.flat(Infinity)});
+
+/* ---------- Measuring skills ---------- */
+def({id:"m1",cat:"Measuring skills",num:"M1",title:"Measuring a Length with a Ruler",view:[-1,15,-4.6,6.4],centre:V(7,2),
+ key:"Always measure from the 0 mark, not from the end of the ruler. Read to the nearest millimetre: 1 cm = 10 mm.",
+ turn:{q:"Draw any two points E and F about 8 cm apart. Measure EF to the nearest millimetre.",chk:"Measure again from F to E. You should get the same reading.",ans:()=>"Your two readings should agree to within 1 mm."},
+ build(){const P=V(1,1.2),Q=polar(P,6.4,0),R=V(3,2.6),S=polar(R,4.7,32);
+  return [
+   step("Look at the scale. Numbered marks are centimetres; the 10 small marks between them are millimetres.",
+     rulerAt(V(1,-0.6),0,-1,"Here is a 30 cm ruler. The long numbered marks are centimetres (cm)."),
+     magShow(V(5.5,-0.6),"5.5 cm",V(2.2,3.0)),hold(2600,"The half-way mark between 5 and 6 is 5.5 cm. Each small mark is 1 mm = 0.1 cm."),
+     magShow(V(7.3,-0.6),"7.3 cm",V(2.2,3.0)),hold(2400,"7 big marks and 3 small marks: 7.3 cm."),magHide(),fade("ruler")),
+   step("Line PQ is drawn below. Place the 0 mark of the ruler exactly on P.",
+     line(P,Q,"given",{say1:"Here is a line PQ to measure."}),pt(P,"P",200),pt(Q,"Q",-20),
+     rulerAt(P,0,-1,"Lay the ruler along the line with the 0 mark on P. The scale side touches the line."),
+     magShow(P,"0 on P",V(-.2,3.4)),hold(2200,"The 0 line must sit exactly on P. Most rulers have a gap before the 0, so never measure from the end.")),
+   step("Make sure the edge of the ruler runs along the whole line, then read the scale at Q.",
+     magShow(Q,"6.4 cm",V(1.6,3.4)),hold(2600,"At Q the reading is 6 big marks and 4 small marks. PQ = 6.4 cm."),magHide(),fade("ruler")),
+   step("Lines can point in any direction. Turn the ruler to lie along the line, with 0 on one end.",
+     line(R,S,"given",{say1:"Here is a sloping line RS."}),pt(R,"R",200),pt(S,"S",60),
+     measure(R,S,"RS",{off1:V(2.2,-.4)})),
+   step("Write your answer with units, to the nearest millimetre.",hold(2500,"PQ = 6.4 cm and RS = 4.7 cm. Always write “cm” after the number."))
+  ];}});
+
+def({id:"m2",cat:"Measuring skills",num:"M2",title:"Drawing a Line of a Given Length",view:[-1,13,-5.2,4.2],centre:V(5,2),
+ key:"Mark the length first, then join the marks. Do not try to stop the pencil at the right place while drawing.",
+ turn:{q:"Draw a line segment CD = 8.6 cm.",chk:"Measure CD to check it.",ans:()=>"CD = 8.6 cm (allow ±1 mm)."},
+ build(){const A=V(1,.6);return [
+   step("Example: draw AB = 7.3 cm. Mark the point A and lay the ruler with 0 on A.",pt(A,"A",200),
+     rulerAt(A,0,1,"Lay the ruler on the paper with its 0 mark on A."),magShow(A,"0 on A",V(-.5,-2.6)),hold(1800,"Check the 0 line is exactly on A."),magHide()),
+   step("Find 7.3 cm on the scale and make a small mark there. Label it B.",
+     magShow(polar(A,7.3,0),"7.3 cm",V(1.5,-2.6)),hold(2000,"7 cm and 3 small marks."),pencilTo(polar(A,7.3,0),"Make a short, sharp mark exactly at 7.3 cm."),pt(polar(A,7.3,0),"B",-30),magHide()),
+   step("Join A to B along the ruler edge.",pencilTo(A,"Put the pencil on A, against the ruler."),drawLine(A,polar(A,7.3,0),"res",{say:"Draw from A to B, keeping the pencil against the ruler."}),fade("pencil"),fade("ruler")),
+   step("Check by measuring AB.",measure(A,polar(A,7.3,0),"AB",{side:1,off0:V(-.5,-2.6),off1:V(1.5,-2.6)}))
+ ];}});
+
+def({id:"m3",cat:"Measuring skills",num:"M3",title:"Setting the Compasses to a Radius",view:[-1,13,-6.2,5.2],centre:V(7,1),
+ key:"Set the compasses against the ruler: point on 0, pencil on the radius. Hold them by the handle so the radius cannot change.",
+ turn:{q:"Set your compasses to 4.5 cm and draw a circle. Draw a diameter and measure it.",chk:"The diameter should be twice the radius.",ans:()=>"Diameter = 9.0 cm."},
+ build(){const O=V(7,1.2);return [
+   step("Check the compasses: the pencil point and the compass point should be level when the legs are closed.",tween("compass",{x:3,y:1,ang:0,r:1},900,"A pair of compasses: a sharp point on one leg and a pencil on the other."),hold(1600,"Tighten the pencil so its tip is level with the compass point.")),
+   step("Set the radius to 3.5 cm using the ruler.",setR(3.5)),
+   step("Place the point at the centre O and draw the circle.",pt(O,"O",225),compassAt(O,0,"Put the compass point on O."),
+     swing(O,0,360,"res","Hold the handle and turn the compasses all the way round in one smooth movement. Tilt them slightly in the direction you are turning.")),
+   step("Check: measure the radius from O to the circle.",fade("compass"),measure(O,polar(O,3.5,0),"OX",{side:-1}))
+ ];}});
+
+def({id:"m4",cat:"Measuring skills",num:"M4",title:"Measuring an Angle with a Protractor",view:[-4.5,18.5,-1.2,8.6],centre:V(8,4),
+ key:"Centre on the vertex, 0° line on one arm, then count from 0° on THAT arm. Decide first whether the angle is acute or obtuse.",
+ turn:{q:"Draw any triangle. Measure its three angles.",chk:"Add the three angles together.",ans:()=>"The three angles should add up to 180° (allow ±2°)."},
+ build(){const B=V(1,1),A=polar(B,6.4,50),C=polar(B,5.6,0);const E=V(13,1),D=polar(E,4.2,180),F=polar(E,6.2,55);
+  return [
+   step("Angle ABC is drawn. The vertex is B, the point in the middle of the name.",line(B,A,"given",{side:1}),line(B,C,"given",{side:-1}),pt(A,"A",90),pt(B,"B",225),pt(C,"C",-60),
+     hold(1500,"Before measuring, estimate: this angle is less than 90°, so it is acute.")),
+   step("Place the protractor and read the scale that starts at 0° on arm BC.",protMeasure(B,0,50,"angle ABC",{vname:"B"})),
+   step("Angle DEF is obtuse. The protractor has two scales; use the one that starts at 0° on your arm.",line(E,D,"given",{side:-1}),line(E,F,"given",{side:1}),pt(D,"D",-90),pt(E,"E",-45),pt(F,"F",90),
+     hold(1500,"This angle is bigger than a right angle, so the answer must be more than 90°."),protMeasure(E,180,55,"angle DEF",{vname:"E"}))
+  ];}});
+
+def({id:"m5",cat:"Measuring skills",num:"M5",title:"Drawing an Angle with a Protractor",view:[-6,10,-1.2,9],centre:V(2,4),
+ key:"Mark the angle with a small dot just outside the scale, remove the protractor, then join the dot to the vertex.",
+ turn:{q:"Use a protractor to draw angle XYZ = 110°.",chk:"Measure the angle again with the protractor turned the other way.",ans:()=>"Angle XYZ = 110°. You will need this angle in Construction 2."},
+ build(){const Y=V(1,1),X=polar(Y,8,0),Zd=polar(Y,5.6,110),Z=polar(Y,7.5,110);return [
+   step("Draw the first arm YX and mark the vertex Y.",line(Y,X,"given",{side:-1}),pt(Y,"Y",225),pt(X,"X",-60)),
+   step("Put the centre of the protractor on Y with the 0° line along YX.",tween("prot",{x:Y.x,y:Y.y,ang:0,flip:1,read:null},1100,"Centre mark on Y. The 0° line lies along YX."),hold(1300,"Use the scale that has 0° on the arm YX.")),
+   step("Count round from 0° to 110° and make a small dot next to the scale.",act(1700,"Count up the scale: 10°, 20°, 30° … 100°, 110°.",S=>{S.tools.prot.read=0;S.tools.prot.r0=0;},(S,t)=>{S.tools.prot.read=110*t;}),
+     magShow(polar(Y,4.45,110),"110°",V(-2.8,1)),pencilTo(Zd,"Make a small dot just outside the scale at 110°."),pt(Zd,"",90,0),hold(1200,"110° is obtuse, so the dot is past the 90° line."),magHide(),fade("pencil"),tween("prot",{o:0,read:null},500)),
+   step("Remove the protractor and join Y to the dot with a ruler. Label Z.",line(Y,Z,"res",{side:1,say1:"Line the ruler up with Y and the dot."}),pt(Z,"Z",120),angMark(Y,0,110,"110°"))
+ ];}});
+
+/* ---------- Lines ---------- */
+def({id:"c1",cat:"Lines",num:"1",title:"Bisecting a Line Segment (Perpendicular Bisector)",view:[-2,10,-7.8,6.2],centre:V(4,0),
+ key:"M is the midpoint of AB (AM = MB) and PQ is perpendicular to AB.",
+ turn:{q:"Draw a line segment XY = 9 cm. Construct the perpendicular bisector of XY and label the midpoint M.",chk:"Measure XM and MY.",ans:()=>"XM = MY = 4.5 cm, and the angle at M is 90°."},
+ build(){const A=V(0,0),B=V(8,0),r=5.5;const [P,Q]=cci(A,r,B,r);const M=V(4,0);
+  return [
+   step("Draw the line segment AB (here AB = 8 cm).",seg(A,0,8,"A","B","given",180,0,{side:1})),
+   step("Open your compasses to more than half the length of AB.",hold(1500,"Half of AB is 4 cm. Any radius more than 4 cm will work. We use 5.5 cm."),setR(5.5,"Open the compasses to 5.5 cm (more than half of AB).")),
+   step("With centre A, draw an arc above and an arc below AB.",arcThru(A,"A",P,14),arcThru(A,"A",Q,14,"con",{place:"Lift the compasses and keep the point on A. Move the pencil below AB."})),
+   step("Keeping the same radius, put the compass point on B and draw arcs that cut the first two arcs at P and Q.",
+     arcThru(B,"B",P,14,"con",{place:"Do not change the radius. Put the compass point on B."}),pt(P,"P",90),
+     arcThru(B,"B",Q,14,"con",{place:"Keep the point on B and swing below AB."}),pt(Q,"Q",-90),fade("compass")),
+   step("Join P and Q with a straight line. PQ cuts AB at M.",line(add(P,V(0,.5)),add(Q,V(0,-.4)),"res",{through:"P and Q",side:-1}),pt(M,"M",-40),sq(M,0)),
+   step("Check: measure AM and MB. They should be equal.",measure(A,M,"AM",{side:-1}),measure(M,B,"MB",{side:-1}),protMeasure(M,0,90,"angle BMP",{vname:"M"}))
+  ];}});
+
+def({id:"c2",cat:"Lines",num:"2",title:"Bisecting an Angle",view:[-1.5,10.5,-5.6,8],centre:V(3,2),
+ key:"The two angles formed, POR and ROQ, are equal.",
+ turn:{q:"Use a protractor to draw angle XYZ = 110°. Using ruler and compasses only, bisect angle XYZ.",chk:"Measure each of the two angles formed.",ans:()=>"Each angle = 55°."},
+ build(){const O=V(0,0),A=polar(O,8.5,0),B=polar(O,8.5,70);const g=bisectGeom(O,0,70,4,3.6);
+  return [
+   step("Start with the angle at vertex O.",line(O,A,"given",{side:-1}),line(O,B,"given",{side:1}),pt(O,"O",225)),
+   step("With centre O and any radius, draw an arc that cuts both arms of the angle at P and Q.",setR(4),arcAt(O,"O",-8,78),pt(g.P,"P",-60),pt(g.Q,"Q",150)),
+   step("With centre P and a suitable radius, draw an arc inside the angle.",hold(1200,"The radius must be more than half the distance PQ, so the arcs will meet. 3.6 cm works."),setR(3.6),arcThru(g.P,"P",g.R,15)),
+   step("With centre Q and the same radius, draw an arc that cuts the last arc at R.",arcThru(g.Q,"Q",g.R,15,"con",{place:"Same radius. Put the compass point on Q."}),pt(g.R,"R",80),fade("compass")),
+   step("Draw a line from O through R. OR bisects the angle.",line(O,polar(O,8.5,35),"res",{through:"O and R"})),
+   step("Check: measure angles POR and ROQ.",protMeasure(O,0,35,"angle POR",{vname:"O"}),protMeasure(O,35,70,"angle ROQ",{vname:"O"}))
+  ];}});
+
+def({id:"c3",cat:"Lines",num:"3",title:"Perpendicular at a Point on a Line",view:[-7,7,-4.8,6.8],centre:V(0,2),
+ key:"This is the same as bisecting the straight angle (180°) at P.",
+ turn:{q:"Draw a line LM = 10 cm. Mark a point N on LM so that LN = 4 cm. Construct the perpendicular to LM at N.",chk:"Use a protractor to check the angle at N.",ans:()=>"The angle at N = 90°."},
+ build(){const L=V(-6,0),R=V(6,0),P=V(0,0),A=V(-3,0),B=V(3,0),r2=4.5;const Q=V(0,Math.sqrt(r2*r2-9));
+  return [
+   step("Draw the line and mark the point P on it.",line(L,R,"given",{side:-1,say1:"Place the ruler and draw a long straight line."}),pt(P,"P",-90)),
+   step("With centre P and any radius, draw arcs that cut the line at A and B (one on each side of P).",setR(3),arcAt(P,"P",168,192),arcAt(P,"P",-12,12,"con",{place:"Same radius, compass point still on P. Swing to the other side."}),pt(A,"A",-110),pt(B,"B",-70)),
+   step("Open the compasses wider. With centre A, draw an arc above P.",setR(4.5,"Open the compasses wider than before: 4.5 cm."),arcThru(A,"A",Q,15)),
+   step("With centre B and the same radius, draw an arc that cuts the last arc at Q.",arcThru(B,"B",Q,15,"con",{place:"Same radius. Compass point on B."}),pt(Q,"Q",60),fade("compass")),
+   step("Join P and Q. PQ is perpendicular to the line.",line(P,add(Q,V(0,1.6)),"res",{through:"P and Q",side:-1}),sq(P,0)),
+   step("Check: use a protractor to check the angle at P.",protMeasure(P,0,90,"angle BPQ",{vname:"P"}))
+  ];}});
+
+def({id:"c4",cat:"Lines",num:"4",title:"Perpendicular from a Point to a Line",view:[-7,7,-7.2,5.8],centre:V(0,1),
+ key:"PN is the shortest distance from P to the line.",
+ turn:{q:"Draw a straight line ST about 11 cm long. Mark a point R about 4 cm above the line. Construct the perpendicular from R to ST, meeting ST at N.",chk:"Measure RN.",ans:()=>"RN ≈ 4 cm (it depends on where you put R). The angle at N is 90°."},
+ build(){const L=V(-6,0),R=V(6,0),P=V(0,4),A=V(-3,0),B=V(3,0);const Q=V(0,-Math.sqrt(16-9));const N=V(0,0);
+  return [
+   step("Draw the line and mark the point P above it.",line(L,R,"given",{side:-1}),pt(P,"P",90)),
+   step("With centre P, draw an arc that cuts the line at two points, A and B.",setR(5,"Open the compasses wide enough to reach past the line: 5 cm."),arcAt(P,"P",-140,-40),pt(A,"A",120),pt(B,"B",60)),
+   step("With centre A and a radius of more than half of AB, draw an arc below the line.",setR(4),arcThru(A,"A",Q,15)),
+   step("With centre B and the same radius, draw an arc that cuts the last arc at Q.",arcThru(B,"B",Q,15,"con",{place:"Same radius. Compass point on B."}),pt(Q,"Q",-90),fade("compass")),
+   step("Join P to Q. PQ meets the line at N, and PN is the perpendicular from P.",line(P,Q,"res",{through:"P and Q",side:-1}),pt(N,"N",-45),sq(N,0)),
+   step("Check: measure PN.",measure(N,P,"NP",{side:-1}))
+  ];}});
+
+def({id:"c5",cat:"Lines",num:"5",title:"A Line Parallel to a Given Line",view:[-3.5,12.5,-5,6.6],centre:V(4,1.7),
+ key:"PQRS is a rhombus (all sides equal to r), so its opposite sides PS and QR are parallel.",
+ turn:{q:"Draw a line AB = 10 cm. Mark a point C about 3.5 cm above AB. Construct a line through C parallel to AB.",chk:"Measure the distance between the lines at both ends.",ans:()=>"The distance is the same at both ends (about 3.5 cm)."},
+ build(){const A=V(-2.5,0),B=V(11,0),P=V(3,3.5),r=5;const Q=V(3-Math.sqrt(r*r-12.25),0),R=add(Q,V(r,0)),S=add(P,V(r,0));
+  return [
+   step("Draw the line AB and mark the point P that is not on the line.",line(A,B,"given",{side:-1}),pt(A,"A",-110),pt(B,"B",-70),pt(P,"P",110)),
+   step("With centre P and a radius r, draw an arc that cuts AB at Q.",setR(5,"Choose a radius r that reaches AB. We use r = 5 cm."),arcThru(P,"P",Q,12),pt(Q,"Q",-110)),
+   step("With centre Q and the same radius r, draw an arc that cuts AB at R.",arcThru(Q,"Q",R,12,"con",{place:"Same radius r. Compass point on Q."}),pt(R,"R",-70)),
+   step("With centre R and radius r, draw an arc above AB. With centre P and radius r, draw an arc that cuts it at S.",arcThru(R,"R",S,14,"con",{place:"Same radius r. Compass point on R."}),arcThru(P,"P",S,14,"con",{place:"Same radius r. Compass point back on P."}),pt(S,"S",70),fade("compass")),
+   step("Draw a line through P and S. PS is parallel to AB.",line(V(-2.5,3.5),V(11,3.5),"res",{through:"P and S",side:1})),
+   step("Check: measure the distance between the lines at both ends.",measure(V(-1.5,0),V(-1.5,3.5),"distance",{side:1}),measure(V(10,0),V(10,3.5),"distance",{side:-1}))
+  ];}});
+
+/* ---------- Angles ---------- */
+function sixty(O,a0,r,nameO){const P=polar(O,r,a0),Q=polar(O,r,a0+60);
+  return {P,Q,acts:[arcAt(O,nameO,a0-6,a0+75,"con",{swing:"Draw a large arc that crosses the arm."}),
+    arcThru(P,"the point where the arc cuts the arm",Q,12,"con",{place:"Do not change the radius. Move the compass point to where the arc cuts the arm."})]};}
+
+def({id:"c6",cat:"Angles",num:"6",title:"Constructing an Angle of 60°",view:[-1.5,10.5,-5.6,8],centre:V(4,3),
+ key:"O, P and Q form an equilateral triangle, so every angle is 60°. Do not change the radius!",
+ turn:{q:"Draw OA = 7 cm. Construct angle AOB = 60° and mark B on the arm so that OB = 7 cm. Join AB.",chk:"Measure AB. What kind of triangle is OAB?",ans:()=>"AB = 7.0 cm. OAB is equilateral."},
+ build(){const O=V(0,0),A=V(8.5,0),r=5;const P=polar(O,r,0),Q=polar(O,r,60);
+  return [
+   step("Draw a line OA. O will be the vertex of the angle.",line(O,A,"given",{side:-1}),pt(O,"O",225),pt(A,"A",-60)),
+   step("With centre O and any radius, draw a large arc that cuts OA at P.",setR(5),arcAt(O,"O",-6,78,"con",{swing:"Swing a large arc from below OA round to well above it."}),pt(P,"P",-50)),
+   step("Keep the same radius. With centre P, draw an arc that cuts the first arc at Q.",arcThru(P,"P",Q,13,"con",{place:"Same radius! Move the compass point to P."}),pt(Q,"Q",140),fade("compass")),
+   step("Draw a line from O through Q. Angle AOQ = 60°.",line(O,polar(O,8,60),"res",{through:"O and Q"}),angMark(O,0,60,"60°")),
+   step("Check with a protractor.",protMeasure(O,0,60,"angle AOQ",{vname:"O"}))
+  ];}});
+
+def({id:"c7",cat:"Angles",num:"7",title:"Constructing an Angle of 30°",view:[-1.5,10.5,-5.6,8],centre:V(4,3),
+ key:"30° is half of 60°, so we bisect the 60° angle.",
+ turn:{q:"Draw PQ = 8 cm. Construct angle QPR = 30° with PR = 8 cm. Join QR.",chk:"Measure QR.",ans:()=>`QR = ${f1(cosRule(8,8,30))} cm.`},
+ build(){const O=V(0,0),A=V(8.5,0),r=5;const P=polar(O,r,0),Q=polar(O,r,60);const R=far(cci(P,3.6,Q,3.6),O);
+  return [
+   step("Construct an angle of 60° at O as before, giving points P and Q on the arc.",line(O,A,"given",{side:-1}),pt(O,"O",225),setR(5),sixty(O,0,5,"O").acts,pt(P,"P",-50),pt(Q,"Q",140)),
+   step("With centre P, draw an arc between the arms of the angle.",setR(3.6,"Set a radius of more than half of PQ: 3.6 cm."),arcThru(P,"P",R,15)),
+   step("With centre Q and the same radius, draw an arc that cuts the last arc at R.",arcThru(Q,"Q",R,15,"con",{place:"Same radius. Compass point on Q."}),pt(R,"R",70),fade("compass")),
+   step("Draw a line from O through R. Angle POR = 30°.",line(O,polar(O,8.5,30),"res",{through:"O and R"}),angMark(O,0,30,"30°",1.3)),
+   step("Check with a protractor.",protMeasure(O,0,30,"angle POR",{vname:"O"}))
+  ];}});
+
+def({id:"c8",cat:"Angles",num:"8",title:"Constructing an Angle of 90°",view:[-5.5,9.5,-5.6,9],centre:V(2,3),
+ key:"90° lies halfway between 60° and 120°. (You may also use the method in Construction 3.)",
+ turn:{q:"Draw OA = 6 cm. Construct angle AOB = 90° and mark OB = 8 cm. Join AB.",chk:"Measure AB.",ans:()=>`AB = ${f1(Math.hypot(6,8))} cm.`},
+ build(){const O=V(0,0),r=4.5;const P=polar(O,r,0),Q=polar(O,r,60),R=polar(O,r,120);const S=far(cci(Q,4,R,4),O);
+  return [
+   step("Draw a line with the point O on it.",line(V(-4.5,0),V(8.5,0),"given",{side:-1}),pt(O,"O",-90)),
+   step("With centre O, draw a large arc that cuts the line at P.",setR(4.5),arcAt(O,"O",-6,140,"con",{swing:"Swing a big arc from just below the line, over the top, to the left."}),pt(P,"P",-50)),
+   step("With centre P and the same radius, cut the arc at Q (60°). With centre Q, cut the arc again at R (120°).",arcThru(P,"P",Q,12,"con",{place:"Same radius. Compass point on P."}),pt(Q,"Q",30),arcThru(Q,"Q",R,12,"con",{place:"Same radius. Now move the compass point to Q."}),pt(R,"R",150)),
+   step("With centres Q and R in turn, draw arcs that cross at S.",setR(4,"Any radius more than half of QR will do: 4 cm."),arcThru(Q,"Q",S,14),arcThru(R,"R",S,14,"con",{place:"Same radius. Compass point on R."}),pt(S,"S",30),fade("compass")),
+   step("Join O to S. Angle POS = 90°.",line(O,polar(O,8.4,90),"res",{through:"O and S"}),sq(O,0)),
+   step("Check with a protractor.",protMeasure(O,0,90,"angle POS",{vname:"O"}))
+  ];}});
+
+def({id:"c9",cat:"Angles",num:"9",title:"Constructing an Angle of 45°",view:[-5.5,9.5,-5.6,8],centre:V(2,3),
+ key:"45° is half of 90°, so we bisect the right angle.",
+ turn:{q:"Construct angle XOY = 45° with OX = 6 cm and OY = 6 cm. Join XY.",chk:"Measure XY.",ans:()=>`XY = ${f1(cosRule(6,6,45))} cm.`},
+ build(){const O=V(0,0);const C1=V(0,Math.sqrt(4.5*4.5-9));const A=V(5,0),B=V(0,5);const E=far(cci(A,4,B,4),O);
+  return [
+   step("Construct a right angle (90°) at O on the line, giving the vertical line OC.",line(V(-4.5,0),V(8.5,0),"given",{side:-1}),pt(O,"O",-90),
+     setR(3),arcAt(O,"O",168,192),arcAt(O,"O",-12,12,"con",{place:"Same radius. Swing to the right of O."}),
+     setR(4.5),arcThru(V(-3,0),"the left-hand cut",C1,13),arcThru(V(3,0),"the right-hand cut",C1,13,"con",{place:"Same radius. Compass point on the right-hand cut."}),
+     line(O,V(0,8.2),"con",{through:"O and the crossing point",side:-1}),pt(V(0,8.2),"C",0)),
+   step("With centre O, draw an arc that cuts OA at A and OC at B.",setR(5),arcAt(O,"O",-6,96),pt(A,"A",-60),pt(B,"B",160)),
+   step("With centres A and B in turn and the same radius, draw arcs that cross at E.",setR(4,"Set a radius of 4 cm (more than half of AB)."),arcThru(A,"A",E,14),arcThru(B,"B",E,14,"con",{place:"Same radius. Compass point on B."}),pt(E,"E",45),fade("compass")),
+   step("Draw a line from O through E. Angle AOE = 45°.",line(O,polar(O,8.4,45),"res",{through:"O and E"}),angMark(O,0,45,"45°",1.4)),
+   step("Check with a protractor.",protMeasure(O,0,45,"angle AOE",{vname:"O"}))
+  ];}});
+
+def({id:"c10",cat:"Angles",num:"10",title:"Constructing an Angle of 120°",view:[-6,9,-5.6,8],centre:V(1,3),
+ key:"Each ‘step’ of the radius around the arc adds 60°: 60° + 60° = 120°.",
+ turn:{q:"Construct triangle OAB in which OA = 5 cm, angle AOB = 120° and OB = 5 cm.",chk:"Measure AB.",ans:()=>`AB = ${f1(cosRule(5,5,120))} cm.`},
+ build(){const O=V(0,0),r=4.5;const P=polar(O,r,0),Q=polar(O,r,60),R=polar(O,r,120);
+  return [
+   step("Draw a line OA.",line(O,V(8.5,0),"given",{side:-1}),pt(O,"O",-90),pt(V(8.5,0),"A",-60)),
+   step("With centre O, draw a large arc that cuts OA at P.",setR(4.5),arcAt(O,"O",-6,140),pt(P,"P",-50)),
+   step("With centre P and the same radius, cut the arc at Q.",arcThru(P,"P",Q,12,"con",{place:"Same radius. Compass point on P."}),pt(Q,"Q",30)),
+   step("With centre Q and the same radius, cut the arc again at R.",arcThru(Q,"Q",R,12,"con",{place:"Same radius. Compass point on Q."}),pt(R,"R",170),fade("compass")),
+   step("Draw a line from O through R. Angle AOR = 120°.",line(O,polar(O,7.5,120),"res",{through:"O and R"}),angMark(O,0,120,"120°",1.1)),
+   step("Check with a protractor.",protMeasure(O,0,120,"angle AOR",{vname:"O"}))
+  ];}});
+
+def({id:"c11",cat:"Angles",num:"11",title:"Constructing an Angle of 135°",view:[-8,7,-5.6,9],centre:V(-1,3),
+ key:"135° = 90° + 45°. We bisect the right angle BOD that lies next to the 90°.",
+ turn:{q:"Construct triangle OPQ in which OP = 4 cm, angle POQ = 135° and OQ = 4 cm.",chk:"Measure PQ.",ans:()=>`PQ = ${f1(cosRule(4,4,135))} cm.`},
+ build(){const O=V(0,0);const C1=V(0,Math.sqrt(4.5*4.5-9));const B=V(0,4.5),D=V(-4.5,0);const E=far(cci(B,4,D,4),O);
+  return [
+   step("Draw a straight line through O and construct a right angle at O, giving OC.",line(V(-7,0),V(6,0),"given",{side:-1}),pt(O,"O",-90),pt(V(6,0),"A",-60),
+     setR(3),arcAt(O,"O",168,192),arcAt(O,"O",-12,12,"con",{place:"Same radius. Swing to the right of O."}),
+     setR(4.5),arcThru(V(-3,0),"the left-hand cut",C1,13),arcThru(V(3,0),"the right-hand cut",C1,13,"con",{place:"Same radius. Compass point on the right-hand cut."}),
+     line(O,V(0,7.8),"con",{through:"O and the crossing point",side:1}),pt(V(0,7.8),"C",0)),
+   step("With centre O, draw an arc that cuts OC at B and the line at D (on the left of O).",arcAt(O,"O",84,186,"con",{place:"Keep the radius at 4.5 cm. Compass point on O."}),pt(B,"B",20),pt(D,"D",-90)),
+   step("With centres B and D in turn and the same radius, draw arcs that cross at E.",setR(4,"Set the compasses to 4 cm (more than half of BD)."),arcThru(B,"B",E,14),arcThru(D,"D",E,14,"con",{place:"Same radius. Compass point on D."}),pt(E,"E",135),fade("compass")),
+   step("Draw a line from O through E. Angle AOE = 135°.",line(O,polar(O,7.5,135),"res",{through:"O and E"}),angMark(O,0,135,"135°",1.1)),
+   step("Check with a protractor.",protMeasure(O,0,135,"angle AOE",{vname:"O"}))
+  ];}});
+
+def({id:"c12",cat:"Angles",num:"12",title:"Constructing an Angle of 75°",view:[-5.5,9.5,-5.6,9.4],centre:V(2,3),
+ key:"75° lies halfway between 60° and 90°. (Similarly, 15° is half of 30°, and 105° = 90° + 15°.)",
+ turn:{q:"Construct triangle ABC in which AB = 8 cm, angle BAC = 75° and angle ABC = 45°.",chk:"Measure AC and BC, and angle ACB.",
+   ans:()=>`AC = ${f1(8*Math.sin(45*D2R)/Math.sin(60*D2R))} cm, BC = ${f1(8*Math.sin(75*D2R)/Math.sin(60*D2R))} cm, angle ACB = 60°.`},
+ build(){const O=V(0,0),r=5;const K=polar(O,r,0),Q=polar(O,r,60),R=polar(O,r,120);const G=far(cci(Q,4,R,4),O);const Tt=polar(O,r,90);const F=far(cci(Q,3,Tt,3),O);
+  return [
+   step("With centre O, draw a large arc cutting OP. Step off Q (60°) and R (120°) with the same radius.",line(O,V(8.5,0),"given",{side:-1}),pt(O,"O",-90),pt(V(8.5,0),"P",-60),
+     setR(5),arcAt(O,"O",-6,135),arcThru(K,"the point where the arc cuts OP",Q,12,"con",{place:"Same radius. Compass point where the arc cuts OP."}),pt(Q,"Q",20),
+     arcThru(Q,"Q",R,12,"con",{place:"Same radius. Compass point on Q."}),pt(R,"R",160)),
+   step("Bisect QR (arcs from Q and R) to get the 90° line. It cuts the arc at T.",setR(4),arcThru(Q,"Q",G,13),arcThru(R,"R",G,13,"con",{place:"Same radius. Compass point on R."}),
+     line(O,polar(O,8.2,90),"con",{through:"O and the crossing point",side:1}),pt(Tt,"T",150)),
+   step("With centres Q and T in turn and the same radius, draw arcs that cross at F.",setR(3,"Set a radius of 3 cm (more than half of QT)."),arcThru(Q,"Q",F,14),arcThru(Tt,"T",F,14,"con",{place:"Same radius. Compass point on T."}),pt(F,"F",80),fade("compass")),
+   step("Draw a line from O through F. Angle POF = 75°.",line(O,polar(O,8.2,75),"res",{through:"O and F"}),angMark(O,0,75,"75°",1.2)),
+   step("Check with a protractor.",protMeasure(O,0,75,"angle POF",{vname:"O"}))
+  ];}});
+
+/* ---------- Triangles ---------- */
+function tri3(A,B,ab,ac,bc,nA,nB,nC,opt={}){const C=cci(A,ac,B,bc)[0];
+  return {C,acts:[
+   seg(A,0,ab,nA,nB,"res",225,-45,{side:-1}),
+   setR(ac),arcThru(A,nA,C,14,"con",{place:`Compass point on ${nA}.`}),
+   setR(bc),arcThru(B,nB,C,14,"con",{place:`Compass point on ${nB}.`}),pt(C,nC,90),fade("compass"),
+   line(A,C,"res",{through:`${nA} and ${nC}`}),line(B,C,"res",{through:`${nB} and ${nC}`})]};}
+
+def({id:"c13",cat:"Triangles",num:"13",title:"Triangle Given Three Sides (SSS)",view:[-2,10,-5.6,7],centre:V(3.5,2),
+ key:"Always start with the longest side as the base. The arcs only meet if the two shorter sides add up to more than the longest.",
+ turn:{q:"Construct triangle PQR in which PQ = 8 cm, QR = 6 cm and PR = 7 cm.",chk:"Measure angle QPR.",ans:()=>`Angle QPR = ${fd(angCos(6,8,7))}.`},
+ build(){const A=V(0,0),B=V(7,0);const C=cci(A,5,B,6)[0];
+  return [
+   step("Example: AB = 7 cm, AC = 5 cm, BC = 6 cm. Draw the base AB = 7 cm.",seg(A,0,7,"A","B","res",225,-45,{side:-1})),
+   step("Open the compasses to 5 cm. With centre A, draw an arc above AB.",setR(5),arcThru(A,"A",C,16)),
+   step("Open the compasses to 6 cm. With centre B, draw an arc that cuts the first arc at C.",setR(6),arcThru(B,"B",C,16),pt(C,"C",90),fade("compass")),
+   step("Join AC and BC. Label all vertices.",line(A,C,"res",{through:"A and C"}),line(B,C,"res",{through:"B and C"})),
+   step("Check: measure AC and angle CAB.",measure(A,C,"AC"),protMeasure(A,0,angOf(A,C),"angle CAB",{vname:"A"}))
+  ];}});
+
+def({id:"c14",cat:"Triangles",num:"14",title:"Triangle Given Two Sides and the Included Angle (SAS)",view:[-2,10,-5.6,8],centre:V(3.5,2),
+ key:"The given angle must be between the two given sides (it is ‘included’).",
+ turn:{q:"Construct triangle XYZ in which XY = 7.5 cm, angle YXZ = 45° and XZ = 6 cm.",chk:"Measure YZ.",ans:()=>`YZ = ${f1(cosRule(7.5,6,45))} cm.`},
+ build(){const A=V(0,0),B=V(7,0),C=polar(A,5,60);const P=polar(A,3.5,0),Q=polar(A,3.5,60);
+  return [
+   step("Example: AB = 7 cm, angle BAC = 60°, AC = 5 cm. Draw the base AB = 7 cm.",seg(A,0,7,"A","B","res",225,-45,{side:-1})),
+   step("Construct an angle of 60° at A.",setR(3.5),sixty(A,0,3.5,"A").acts,fade("compass"),line(A,polar(A,7.5,60),"con",{through:"A and the crossing point"})),
+   step("Open the compasses to 5 cm. With centre A, cut the arm of the angle at C.",setR(5),arcThru(A,"A",C,8),pt(C,"C",150),fade("compass")),
+   step("Join BC.",line(A,C,"res",{through:"A and C"}),line(B,C,"res",{through:"B and C"}),angMark(A,0,60,"60°",1)),
+   step("Check: measure BC.",measure(B,C,"BC"))
+  ];}});
+
+def({id:"c15",cat:"Triangles",num:"15",title:"Triangle Given Two Angles and a Side (ASA)",view:[-2,11,-5.6,7.6],centre:V(4,2),
+ key:"Check: the third angle should be 180° − 60° − 45° = 75°.",
+ turn:{q:"Construct triangle ABC in which AB = 9 cm, angle BAC = 60° and angle ABC = 30°.",chk:"Measure AC and BC, and angle ACB.",ans:()=>`AC = ${f1(9*Math.sin(30*D2R))} cm, BC = ${f1(9*Math.sin(60*D2R))} cm, angle ACB = 90°.`},
+ build(){const A=V(0,0),B=V(8,0);const C=lli(A,polar(A,1,60),B,polar(B,1,135));
+  const B1=V(6,0),B2=V(10,0),Up=V(8,Math.sqrt(9-4));const b1=V(5.5,0),b2=V(8,2.5);const E=far(cci(b1,2.2,b2,2.2),B);
+  return [
+   step("Example: AB = 8 cm, angle BAC = 60°, angle ABC = 45°. Draw the base AB = 8 cm.",seg(A,0,8,"A","B","res",225,-90,{side:-1}),line(B,V(10.6,0),"con",{side:-1,say1:"Extend the line a little beyond B (you will need it for the right angle at B)."})),
+   step("Construct an angle of 60° at A.",setR(3.5),sixty(A,0,3.5,"A").acts,fade("compass"),line(A,polar(A,7.6,60),"con",{through:"A and the crossing point"})),
+   step("Construct an angle of 45° at B (a right angle at B, then bisect it).",
+     setR(2),arcAt(B,"B",168,192),arcAt(B,"B",-12,12,"con",{place:"Same radius. Swing to the other side of B."}),
+     setR(3),arcThru(B1,"the left-hand cut",Up,13),arcThru(B2,"the right-hand cut",Up,13,"con",{place:"Same radius. Compass point on the right-hand cut."}),
+     line(B,V(8,4.6),"con",{through:"B and the crossing point",side:-1}),
+     setR(2.5),arcAt(B,"B",84,186,"con",{swing:"Draw an arc across both arms of the right angle at B."}),
+     setR(2.2),arcThru(b1,"the cut on BA",E,14),arcThru(b2,"the cut on the vertical line",E,14,"con",{place:"Same radius. Compass point on the vertical arm."}),fade("compass"),
+     line(B,polar(B,8,135),"con",{through:"B and the crossing point"})),
+   step("Extend both arms until they meet. Label the meeting point C.",pt(C,"C",90),line(A,C,"res",{through:"A and C"}),line(B,C,"res",{through:"B and C"}),angMark(A,0,60,"60°",1),angMark(B,135,180,"45°",1.1)),
+   step("Check: angle ACB should be 75°.",protMeasure(C,angOf(C,B),angOf(C,A),"angle ACB",{vname:"C"}))
+  ];}});
+
+/* ---------- Quadrilaterals ---------- */
+def({id:"c16",cat:"Quadrilaterals",num:"16",title:"Constructing a Parallelogram",view:[-2,12,-5.6,7.4],centre:V(4.7,2.2),
+ key:"Opposite sides of a parallelogram are equal, which is why we use radius AB from D and radius AD from B.",
+ turn:{q:"Construct parallelogram PQRS in which PQ = 8 cm, PS = 5.5 cm and angle QPS = 60°.",chk:"Measure the diagonals PR and QS.",ans:()=>`PR = ${f1(cosRule(8,5.5,120))} cm, QS = ${f1(cosRule(8,5.5,60))} cm.`},
+ build(){const A=V(0,0),B=V(7,0),D=polar(A,5,60),C=add(B,sub(D,A));
+  return [
+   step("Example: AB = 7 cm, AD = 5 cm, angle DAB = 60°. Draw AB = 7 cm.",seg(A,0,7,"A","B","res",225,-45,{side:-1})),
+   step("Construct an angle of 60° at A and mark D on the arm so that AD = 5 cm.",setR(3),sixty(A,0,3,"A").acts,fade("compass"),line(A,polar(A,7,60),"con",{through:"A and the crossing point"}),
+     setR(5),arcThru(A,"A",D,7),pt(D,"D",150),fade("compass"),line(A,D,"res",{through:"A and D"})),
+   step("With centre D and radius 7 cm (= AB), draw an arc.",setR(7),arcThru(D,"D",C,12)),
+   step("With centre B and radius 5 cm (= AD), draw an arc that cuts the last arc at C.",setR(5),arcThru(B,"B",C,12),pt(C,"C",45),fade("compass")),
+   step("Join DC and BC.",line(D,C,"res",{through:"D and C"}),line(B,C,"res",{through:"B and C"})),
+   step("Check: measure the diagonals AC and BD.",measure(A,C,"AC",{side:-1}),measure(B,D,"BD"))
+  ];}});
+
+function perpAt(A,leftPt,r1,r2,upLen,nameA){const L=V(A.x-r1,A.y),R=V(A.x+r1,A.y),U=V(A.x,A.y+Math.sqrt(r2*r2-r1*r1));
+  return [setR(r1),arcAt(A,nameA,168,192),arcAt(A,nameA,-12,12,"con",{place:`Same radius. Swing to the other side of ${nameA}.`}),
+   setR(r2),arcThru(L,"the left-hand cut",U,13),arcThru(R,"the right-hand cut",U,13,"con",{place:"Same radius. Compass point on the right-hand cut."}),
+   fade("compass"),line(A,V(A.x,A.y+upLen),"con",{through:`${nameA} and the crossing point`})];}
+
+def({id:"c17",cat:"Quadrilaterals",num:"17",title:"Constructing a Rectangle",view:[-4.5,10.5,-5.6,8],centre:V(3.5,2),
+ key:"Every angle of a rectangle is 90°, and opposite sides are equal.",
+ turn:{q:"Construct rectangle ABCD in which AB = 8 cm and BC = 5 cm.",chk:"Measure the diagonal AC.",ans:()=>`AC = ${f1(Math.hypot(8,5))} cm.`},
+ build(){const A=V(0,0),B=V(7,0),D=V(0,4),C=V(7,4);
+  return [
+   step("Example: AB = 7 cm, BC = 4 cm. Draw AB = 7 cm, extending the line to the left of A.",seg(A,0,7,"A","B","res",-60,-45,{side:-1}),line(V(-3.6,0),A,"con",{side:-1,say1:"Extend the line about 3 cm to the left of A."})),
+   step("Construct a right angle at A (perpendicular at a point on a line).",perpAt(A,null,2.5,3.5,6,"A")),
+   step("Mark D on the perpendicular so that AD = 4 cm.",setR(4),arcThru(A,"A",D,7),pt(D,"D",150),fade("compass"),line(A,D,"res",{through:"A and D",side:-1})),
+   step("With centre D and radius 7 cm, draw an arc. With centre B and radius 4 cm, draw an arc that cuts it at C.",setR(7),arcThru(D,"D",C,10),setR(4),arcThru(B,"B",C,12),pt(C,"C",45),fade("compass")),
+   step("Join DC and BC.",line(D,C,"res",{through:"D and C"}),line(B,C,"res",{through:"B and C"})),
+   step("Check: measure the diagonal AC.",measure(A,C,"AC",{side:-1}))
+  ];}});
+
+def({id:"c18",cat:"Quadrilaterals",num:"18",title:"Constructing a Square",view:[-4.5,9.5,-5.6,8],centre:V(2.5,2.5),
+ key:"All four sides are equal and all four angles are 90°.",
+ turn:{q:"Construct square WXYZ with sides of 6 cm.",chk:"Measure the diagonal WY.",ans:()=>`WY = ${f1(6*Math.SQRT2)} cm.`},
+ build(){const A=V(0,0),B=V(5,0),D=V(0,5),C=V(5,5);
+  return [
+   step("Example: side 5 cm. Draw AB = 5 cm, extending the line to the left of A.",seg(A,0,5,"A","B","res",-60,-45,{side:-1}),line(V(-3.6,0),A,"con",{side:-1,say1:"Extend the line about 3 cm to the left of A."})),
+   step("Construct a right angle at A.",perpAt(A,null,2.5,3.5,6.6,"A")),
+   step("Mark D on the perpendicular so that AD = 5 cm.",setR(5),arcThru(A,"A",D,7),pt(D,"D",150),fade("compass"),line(A,D,"res",{through:"A and D",side:-1})),
+   step("With centres D and B in turn and radius 5 cm, draw arcs that meet at C.",arcThru(D,"D",C,12,"con",{place:"Keep the radius at 5 cm. Compass point on D."}),arcThru(B,"B",C,12,"con",{place:"Same radius. Compass point on B."}),pt(C,"C",45),fade("compass")),
+   step("Join DC and BC.",line(D,C,"res",{through:"D and C"}),line(B,C,"res",{through:"B and C"})),
+   step("Check: measure the diagonal AC.",measure(A,C,"AC",{side:-1}))
+  ];}});
+
+def({id:"c19",cat:"Quadrilaterals",num:"19",title:"Constructing a Rhombus",view:[-2,10,-7.4,5],centre:V(4,0),
+ key:"The diagonals of a rhombus bisect each other at right angles.",
+ turn:{q:"Construct rhombus ABCD with sides of 6.5 cm and diagonal AC = 10 cm.",chk:"Measure the diagonal BD.",ans:()=>`BD = ${f1(2*Math.sqrt(6.5*6.5-25))} cm.`},
+ build(){const A=V(0,0),C=V(8,0);const [B,D]=cci(A,5,C,5);
+  return [
+   step("Example: sides 5 cm, diagonal AC = 8 cm. Draw the diagonal AC = 8 cm.",seg(A,0,8,"A","C","con",180,0,{side:1})),
+   step("Open the compasses to 5 cm. With centre A, draw an arc above AC and an arc below AC.",setR(5),arcThru(A,"A",B,14),arcThru(A,"A",D,14,"con",{place:"Same radius, point still on A. Swing below AC."})),
+   step("With centre C and the same radius, cut those arcs at B (above) and D (below).",arcThru(C,"C",B,14,"con",{place:"Same radius. Compass point on C."}),pt(B,"B",90),arcThru(C,"C",D,14,"con",{place:"Swing below AC."}),pt(D,"D",-90),fade("compass")),
+   step("Join AB, BC, CD and DA.",line(A,B,"res",{through:"A and B"}),line(B,C,"res",{through:"B and C"}),line(C,D,"res",{through:"C and D"}),line(D,A,"res",{through:"D and A"})),
+   step("Check: measure the diagonal BD.",line(B,D,"con",{through:"B and D",side:1}),measure(D,B,"DB",{side:1}))
+  ];}});
+
+def({id:"c20",cat:"Quadrilaterals",num:"20",title:"Constructing a Trapezium",view:[-2,11,-5.6,7.2],centre:V(4.5,1.8),
+ key:"You could also draw the line through D using Construction 5, a line parallel to a given line.",
+ turn:{q:"Construct trapezium ABCD in which AB = 9 cm, AB is parallel to DC, angle DAB = 60°, AD = 5 cm and DC = 5 cm.",chk:"Measure BC and angle ABC.",
+   ans:()=>{const D=polar(V(0,0),5,60),C=add(D,V(5,0)),B=V(9,0);return `BC = ${f1(dist(B,C))} cm, angle ABC = ${fd(angAt(B,V(0,0),C))}.`;}},
+ build(){const A=V(0,0),B=V(8,0),D=polar(A,4,60),C=add(D,V(4.5,0));const k1=polar(D,2.5,240),k2=polar(D,2.5,300),k3=polar(D,2.5,360);
+  return [
+   step("Example: AB = 8 cm, AB parallel to DC, angle DAB = 60°, AD = 4 cm, DC = 4.5 cm. Draw AB = 8 cm.",seg(A,0,8,"A","B","res",225,-45,{side:-1})),
+   step("Construct 60° at A and mark D so that AD = 4 cm.",setR(3),sixty(A,0,3,"A").acts,fade("compass"),line(A,polar(A,6,60),"con",{through:"A and the crossing point"}),
+     setR(4),arcThru(A,"A",D,7),pt(D,"D",150),fade("compass"),line(A,D,"res",{through:"A and D"})),
+   step("At D, construct angle ADC = 120° (co-interior angles add to 180°), so that DC is parallel to AB.",
+     hold(1800,"120° = 60° + 60°. Step the radius twice round an arc, starting from the arm DA."),
+     setR(2.5),arcAt(D,"D",230,372,"con",{swing:"Draw an arc that cuts DA and swings round to the right of D."}),
+     arcThru(k1,"the point where the arc cuts DA",k2,12,"con",{place:"Same radius. Compass point where the arc cuts DA."}),
+     arcThru(k2,"the new crossing point",k3,12,"con",{place:"Same radius. Move the compass point to the crossing you just made."}),fade("compass"),
+     line(D,add(D,V(6,0)),"con",{through:"D and the second crossing point"}),angMark(D,-120,0,"120°",.8)),
+   step("Mark C on this line so that DC = 4.5 cm.",setR(4.5),arcThru(D,"D",C,8),pt(C,"C",60),fade("compass"),line(D,C,"res",{through:"D and C"})),
+   step("Join BC.",line(B,C,"res",{through:"B and C"})),
+   step("Check: measure BC and angle ABC.",measure(B,C,"BC"),protMeasure(B,180,angOf(B,C),"angle ABC",{vname:"B"}))
+  ];}});
+
+/* ---------- Circles ---------- */
+def({id:"c21",cat:"Circles",num:"21",title:"The Circumscribed Circle (Circumcircle) of a Triangle",view:[-3,10,-7.2,8.4],centre:V(3.5,1.6),
+ key:"O (the circumcentre) is the same distance from A, B and C. Two bisectors are enough; the third one also passes through O and can be used as a check.",
+ turn:{q:"Construct triangle PQR in which PQ = 8 cm, QR = 7 cm and PR = 6 cm. Construct the circle that passes through P, Q and R.",chk:"Measure the radius of the circle.",
+   ans:()=>{const a=7,b=6,c=8,s=(a+b+c)/2,K=Math.sqrt(s*(s-a)*(s-b)*(s-c));return `Radius = ${f1(a*b*c/(4*K))} cm.`;}},
+ build(){const A=V(0,0),B=V(7,0);const C=cci(A,5,B,6)[0];
+  const ab=cci(A,4.5,B,4.5);const M1=V(3.5,0);
+  const acP=cci(A,3.6,C,3.6);const O=lli(ab[0],ab[1],acP[0],acP[1]);const R=dist(O,A);
+  const ex=(p,q,k)=>add(q,mul(sub(q,p),k/dist(p,q)));
+  return [
+   step("Construct the triangle ABC from the given measurements (here AB = 7 cm, AC = 5 cm, BC = 6 cm).",seg(A,0,7,"A","B","res",225,-45,{side:-1}),
+     setR(5),arcThru(A,"A",C,10),setR(6),arcThru(B,"B",C,10),pt(C,"C",95),fade("compass"),line(A,C,"res",{through:"A and C"}),line(B,C,"res",{through:"B and C"})),
+   step("Construct the perpendicular bisector of AB.",setR(4.5,"Radius more than half of AB: 4.5 cm."),arcThru(A,"A",ab[0],12),arcThru(A,"A",ab[1],12,"con",{place:"Same radius. Swing below AB."}),
+     arcThru(B,"B",ab[0],12,"con",{place:"Same radius. Compass point on B."}),arcThru(B,"B",ab[1],12,"con",{place:"Swing below AB."}),fade("compass"),
+     line(ex(ab[1],ab[0],.6),ex(ab[0],ab[1],.6),"con",{through:"the two crossing points"})),
+   step("Construct the perpendicular bisector of AC. Label the point where the two bisectors meet O.",setR(3.6,"Radius more than half of AC: 3.6 cm."),
+     arcThru(A,"A",acP[0],12),arcThru(A,"A",acP[1],12,"con",{place:"Same radius. Swing to the other side of AC."}),
+     arcThru(C,"C",acP[0],12,"con",{place:"Same radius. Compass point on C."}),arcThru(C,"C",acP[1],12,"con",{place:"Swing to the other side of AC."}),fade("compass"),
+     line(ex(acP[1],acP[0],1),ex(acP[0],acP[1],1.4),"con",{through:"the two crossing points"}),pt(O,"O",-30)),
+   step("Place the compass point on O and open it to A (radius OA).",fitR(O,A,"O","A"),hold(1200,`Radius OA = ${f1(R)} cm. Keep this radius.`)),
+   step("Draw the circle. It passes through all three vertices A, B and C.",swing(O,angOf(O,A),angOf(O,A)+360,"res","Turn the compasses all the way round. The pencil should pass through A, B and C.")),
+   step("Check: measure the radius OB and OC.",measure(O,B,"OB",{side:-1}),measure(O,C,"OC"))
+  ];}});
+
+def({id:"c22",cat:"Circles",num:"22",title:"The Inscribed Circle (Incircle) of a Triangle",view:[-2,10,-6.8,8],centre:V(3.8,2),
+ key:"I (the incentre) is the same distance from all three sides. The radius is the perpendicular distance IN, not the distance from I to a vertex.",
+ turn:{q:"Construct triangle XYZ in which XY = 9 cm, YZ = 7 cm and XZ = 8 cm. Construct the circle that touches all three sides of the triangle.",chk:"Measure the radius of the circle.",
+   ans:()=>{const a=7,b=8,c=9,s=(a+b+c)/2,K=Math.sqrt(s*(s-a)*(s-b)*(s-c));return `Radius = ${f1(K/s)} cm.`;}},
+ build(){const A=V(0,0),B=V(8,0);const C=cci(A,6,B,7)[0];
+  const aC=angOf(A,C),bC=angOf(B,C);const gA=bisectGeom(A,0,aC,2.5,2);const gB=bisectGeom(B,bC,180,2.5,2);
+  const I=lli(A,gA.R,B,gB.R);const rr=I.y;const N=V(I.x,0);const hc=Math.sqrt(3*3-rr*rr);const pA=V(I.x-hc,0),pB=V(I.x+hc,0);const Q=V(I.x,-Math.sqrt(2.6*2.6-hc*hc));
+  return [
+   step("Construct the triangle ABC from the given measurements (here AB = 8 cm, AC = 6 cm, BC = 7 cm).",seg(A,0,8,"A","B","res",225,-45,{side:-1}),
+     setR(6),arcThru(A,"A",C,10),setR(7),arcThru(B,"B",C,10),pt(C,"C",95),fade("compass"),line(A,C,"res",{through:"A and C"}),line(B,C,"res",{through:"B and C"})),
+   step("Bisect angle BAC.",setR(2.5),arcAt(A,"A",-6,aC+6),setR(2,"Radius 2 cm for the two crossing arcs."),arcThru(gA.P,"the cut on AB",gA.R,14),arcThru(gA.Q,"the cut on AC",gA.R,14,"con",{place:"Same radius. Compass point on the cut on AC."}),fade("compass"),
+     line(A,add(A,mul(sub(gA.R,A),6.2/dist(A,gA.R))),"con",{through:"A and the crossing point"})),
+   step("Bisect angle ABC. Label the point where the two bisectors meet I.",setR(2.5),arcAt(B,"B",bC-6,186),setR(2),arcThru(gB.P,"the cut on BC",gB.R,14),arcThru(gB.Q,"the cut on BA",gB.R,14,"con",{place:"Same radius. Compass point on the cut on BA."}),fade("compass"),
+     line(B,add(B,mul(sub(gB.R,B),6.2/dist(B,gB.R))),"con",{through:"B and the crossing point"}),pt(I,"I",90)),
+   step("Construct the perpendicular from I to AB, meeting AB at N.",setR(3),arcAt(I,"I",angOf(I,pA)-8,angOf(I,pB)+8,"con",{swing:"Draw an arc that cuts AB in two places."}),
+     setR(2.6),arcThru(pA,"the left cut",Q,12),arcThru(pB,"the right cut",Q,12,"con",{place:"Same radius. Compass point on the right cut."}),fade("compass"),
+     line(I,Q,"con",{through:"I and the crossing point below AB",side:-1}),pt(N,"N",-60),sq(N,0)),
+   step("With centre I and radius IN, draw the circle. It touches all three sides.",fitR(I,N,"I","N"),swing(I,-90,270,"res","Turn the compasses all the way round. The circle just touches each side once.")),
+   step("Check: measure the radius IN.",measure(N,I,"NI",{side:1}))
+  ];}});
+
+/* ---------- Exam practice ---------- */
+def({id:"e1",cat:"Exam practice",num:"Q1",title:"Exam Practice 1: Triangle and Perpendicular",view:[-2,10.5,-7.4,8],centre:V(4,2),
+ key:"(a) AB = 8 cm, angle BAC = 60°, AC = 6 cm. (b) Perpendicular from C to AB, meeting AB at D. (c) Measure CD and BC.",
+ turn:{q:"Now do it yourself on paper, then compare your measurements.",chk:"Measure CD and BC.",ans:()=>`CD = ${f1(6*Math.sin(60*D2R))} cm, BC = ${f1(cosRule(8,6,60))} cm.`},
+ build(){const A=V(0,0),B=V(8,0),C=polar(A,6,60);const hc=Math.sqrt(5.6*5.6-27);const pA=V(3-hc,0),pB=V(3+hc,0);const Q=V(3,-Math.sqrt(16-hc*hc)),D=V(3,0);
+  return [
+   step("(a) Draw AB = 8 cm.",seg(A,0,8,"A","B","res",225,-45,{side:-1})),
+   step("(a) Construct angle BAC = 60° at A.",setR(3.5),sixty(A,0,3.5,"A").acts,fade("compass"),line(A,polar(A,7.6,60),"con",{through:"A and the crossing point"})),
+   step("(a) Mark C on the arm so that AC = 6 cm, then join BC.",setR(6),arcThru(A,"A",C,8),pt(C,"C",120),fade("compass"),line(A,C,"res",{through:"A and C"}),line(B,C,"res",{through:"B and C"})),
+   step("(b) With centre C, draw an arc that cuts AB at two points.",setR(5.6,"Open the compasses wide enough to reach past AB: 5.6 cm."),arcAt(C,"C",angOf(C,pA)-6,angOf(C,pB)+6)),
+   step("(b) From the two cuts, draw arcs that cross below AB. Join C to the crossing point, meeting AB at D.",setR(4),arcThru(pA,"the left cut",Q,12),arcThru(pB,"the right cut",Q,12,"con",{place:"Same radius. Compass point on the right cut."}),fade("compass"),
+     line(C,Q,"con",{through:"C and the crossing point",side:-1}),line(C,D,"res",{through:"C and D",side:-1}),pt(D,"D",-60),sq(D,0)),
+   step("(c) Measure CD and BC.",measure(D,C,"DC",{side:-1}),measure(B,C,"BC"))
+  ];}});
+
+def({id:"e2",cat:"Exam practice",num:"Q2",title:"Exam Practice 2: Quadrilateral PQRS",view:[-7,11,-5.6,8.6],centre:V(2.5,3),
+ key:"PQ = 7 cm, angle QPS = 120°, PS = 5 cm, angle PQR = 90°, QR = 6 cm. Then measure RS.",
+ turn:{q:"Now do it yourself on paper, then compare your measurement.",chk:"Measure RS.",ans:()=>{const S=polar(V(0,0),5,120),R=V(7,6);return `RS = ${f1(dist(R,S))} cm.`;}},
+ build(){const P=V(0,0),Q=V(7,0),S=polar(P,5,120),R=V(7,6);const k0=polar(P,3,0),k1=polar(P,3,60),k2=polar(P,3,120);
+  return [
+   step("Draw PQ = 7 cm and extend the line beyond Q.",seg(P,0,7,"P","Q","res",-60,-60,{side:-1}),line(Q,V(10,0),"con",{side:-1,say1:"Extend PQ about 3 cm beyond Q (needed for the right angle at Q)."})),
+   step("Construct angle QPS = 120° at P: step the radius twice round an arc.",setR(3),arcAt(P,"P",-6,135),arcThru(k0,"the cut on PQ",k1,12,"con",{place:"Same radius. Compass point where the arc cuts PQ."}),arcThru(k1,"the first crossing",k2,12,"con",{place:"Same radius. Compass point on the first crossing."}),fade("compass"),
+     line(P,polar(P,6.6,120),"con",{through:"P and the second crossing"})),
+   step("Mark S so that PS = 5 cm. Join PS.",setR(5),arcThru(P,"P",S,8),pt(S,"S",150),fade("compass"),line(P,S,"res",{through:"P and S"})),
+   step("Construct angle PQR = 90° at Q.",perpAt(Q,null,2.5,3.5,7.4,"Q")),
+   step("Mark R so that QR = 6 cm, then join QR and RS.",setR(6),arcThru(Q,"Q",R,7),pt(R,"R",30),fade("compass"),line(Q,R,"res",{through:"Q and R",side:-1}),line(S,R,"res",{through:"S and R"}),sq(Q,90)),
+   step("(b) Measure RS.",measure(S,R,"SR"))
+  ];}});
+
+def({id:"e3",cat:"Exam practice",num:"Q3",title:"Exam Practice 3: Triangle and Angle Bisector",view:[-2,10,-5.6,7],centre:V(3.8,2),
+ key:"XY = 7.5 cm, YZ = 6.5 cm, XZ = 5.5 cm. Bisect angle YXZ to meet YZ at W, then measure YW.",
+ turn:{q:"Now do it yourself on paper, then compare your measurement.",chk:"Measure YW.",ans:()=>`YW = ${f1(6.5*7.5/13)} cm.`},
+ build(){const X=V(0,0),Y=V(7.5,0);const Z=cci(X,5.5,Y,6.5)[0];const aZ=angOf(X,Z);const g=bisectGeom(X,0,aZ,3,2.4);const W=lli(X,g.R,Y,Z);
+  return [
+   step("(a) Draw the base XY = 7.5 cm.",seg(X,0,7.5,"X","Y","res",225,-45,{side:-1})),
+   step("(a) Arc of radius 5.5 cm from X and 6.5 cm from Y meet at Z. Join XZ and YZ.",setR(5.5),arcThru(X,"X",Z,14),setR(6.5),arcThru(Y,"Y",Z,14),pt(Z,"Z",95),fade("compass"),line(X,Z,"res",{through:"X and Z"}),line(Y,Z,"res",{through:"Y and Z"})),
+   step("(b) With centre X, draw an arc that cuts XY and XZ.",setR(3),arcAt(X,"X",-6,aZ+6)),
+   step("(b) From the two cuts, draw equal arcs that cross. Draw the bisector from X; it meets YZ at W.",setR(2.4),arcThru(g.P,"the cut on XY",g.R,14),arcThru(g.Q,"the cut on XZ",g.R,14,"con",{place:"Same radius. Compass point on the cut on XZ."}),fade("compass"),
+     line(X,W,"res",{through:"X and the crossing point"}),pt(W,"W",20)),
+   step("(c) Measure YW.",measure(Y,W,"YW"))
+  ];}});
+
+/* ================= rendering ================= */
+const svg=document.getElementById("svg"),gBG=document.getElementById("bg"),gEls=document.getElementById("els"),gTools=document.getElementById("tools"),gMag=document.getElementById("mag");
+let VB={x0:0,y0:0,x1:16,y1:10};
+function setView(v){let [x0,x1,y0,y1]=v;const w=x1-x0,h=y1-y0,ar=16/10;
+  if(w/h<ar){const nw=h*ar;x0-= (nw-w)/2;x1=x0+nw;}else{const nh=w/ar;y0-=(nh-h)/2;y1=y0+nh;}
+  VB={x0,y0,x1,y1};svg.setAttribute("viewBox",`${x0} ${-y1} ${x1-x0} ${y1-y0}`);
+  let s=`<rect class="paper" x="${x0}" y="${-y1}" width="${x1-x0}" height="${y1-y0}"/>`;
+  for(let x=Math.ceil(x0);x<=x1;x++)s+=`<line class="gridl" x1="${x}" y1="${-y1}" x2="${x}" y2="${-y0}"/>`;
+  for(let y=Math.ceil(y0);y<=y1;y++)s+=`<line class="gridl" x1="${x0}" y1="${-y}" x2="${x1}" y2="${-y}"/>`;
+  gBG.innerHTML=s;}
+const n3=x=>Math.round(x*1000)/1000;
+function arcPts(c,r,a0,a1){const n=Math.max(6,Math.ceil(Math.abs(a1-a0)/2));let s="";for(let i=0;i<=n;i++){const p=polar(c,r,lerp(a0,a1,i/n));s+=`${n3(p.x)},${n3(-p.y)} `;}return s;}
+function renderEls(S){let s="";for(const e of S.els){
+  if(e.t==="line"){const b=add(e.a,mul(sub(e.b,e.a),e.p));s+=`<line class="k-${e.kind}${e.dash?" k-guide":""}" x1="${n3(e.a.x)}" y1="${n3(-e.a.y)}" x2="${n3(b.x)}" y2="${n3(-b.y)}"/>`;}
+  else if(e.t==="arc"){if(e.p>0)s+=`<polyline class="k-${e.kind}" points="${arcPts(e.c,e.r,e.a0,lerp(e.a0,e.a1,e.p))}"/>`;}
+  else if(e.t==="pt"){const q=polar(e.p,e.d,e.dir);s+=`<g opacity="${e.o}"><circle class="dot" cx="${n3(e.p.x)}" cy="${n3(-e.p.y)}" r=".075"/>`+(e.label?`<text class="lbl" x="${n3(q.x)}" y="${n3(-q.y)}" text-anchor="middle" dominant-baseline="middle">${e.label}</text>`:"")+`</g>`;}
+  else if(e.t==="ang"){const m=polar(e.v,e.r+.55,(e.a0+e.a1)/2);s+=`<g opacity="${e.o}"><polyline class="k-res" style="stroke-width:.03" points="${arcPts(e.v,e.r,e.a0,e.a1)}"/><text class="alb" x="${n3(m.x)}" y="${n3(-m.y)}" text-anchor="middle" dominant-baseline="middle">${e.text}</text></g>`;}
+  else if(e.t==="sq"){const k=.38,u=polar(V(0,0),k,e.a0),w=polar(V(0,0),k,e.a0+90);const a=add(e.v,u),b=add(add(e.v,u),w),c=add(e.v,w);
+    s+=`<polyline opacity="${e.o}" class="k-res" style="stroke-width:.03" points="${n3(a.x)},${n3(-a.y)} ${n3(b.x)},${n3(-b.y)} ${n3(c.x)},${n3(-c.y)}"/>`;}
+ }gEls.innerHTML=s;}
+/* static tool art (local SVG coords) */
+function rulerArt(side){const s=side===1?-1:1,W=3.1;let o=`<rect class="r-body" x="-0.7" y="${s<0?-W:0}" width="31.4" height="${W}" rx=".12"/>`;
+  o+=`<line class="r-edge" x1="-0.7" y1="0" x2="30.7" y2="0"/>`;
+  for(let i=0;i<=300;i++){const x=i/10,L=i%10===0?.6:i%5===0?.42:.25;o+=`<line class="r-tick" x1="${x}" y1="0" x2="${x}" y2="${n3(s*L)}"/>`;
+    if(i%10===0)o+=`<text class="r-num" x="${x}" y="${n3(s*.95+(s>0?.13:.13))}" dominant-baseline="middle">${i/10}</text>`;}
+  o+=`<text class="r-num" x="31" y="${n3(s*1.9)}" style="font-size:.3px" text-anchor="end">cm</text>`;return o;}
+function protArt(flip){const R=5;let o="";const pth=[];for(let a=0;a<=180;a+=2){pth.push(`${n3(R*Math.cos(a*D2R))},${n3(-flip*R*Math.sin(a*D2R))}`);}
+  o+=`<path class="p-body" d="M${-R-.15},0 L${pth.join(" L")} L${R+.15},0 L${R+.15},${n3(flip*.35)} L${-R-.15},${n3(flip*.35)} Z"/>`;
+  o+=`<line class="p-tick" x1="${-R}" y1="0" x2="${R}" y2="0"/><circle cx="0" cy="0" r=".06" fill="var(--prot-ink)"/><line class="p-tick" x1="0" y1="0" x2="0" y2="${-flip*.5}"/>`;
+  for(let a=0;a<=180;a++){const L=a%10===0?.55:a%5===0?.38:.22;const c=Math.cos(a*D2R),sn=-flip*Math.sin(a*D2R);
+    o+=`<line class="p-tick" x1="${n3(R*c)}" y1="${n3(R*sn)}" x2="${n3((R-L)*c)}" y2="${n3((R-L)*sn)}"/>`;
+    if(a%10===0){o+=`<text class="p-num" x="${n3(4.15*c)}" y="${n3(4.15*sn)}">${a}</text><text class="p-num o" x="${n3(3.65*c)}" y="${n3(3.65*sn)}">${180-a}</text>`;}}
+  for(let a=10;a<180;a+=10){const c=Math.cos(a*D2R),sn=-flip*Math.sin(a*D2R);o+=`<line class="p-tick" style="opacity:.35" x1="${n3(1.2*c)}" y1="${n3(1.2*sn)}" x2="${n3(3.3*c)}" y2="${n3(3.3*sn)}"/>`;}
+  return o;}
+const ART={r1:rulerArt(1),r2:rulerArt(-1),p1:protArt(1),p2:protArt(-1)};
+gTools.innerHTML=`<g id="tRuler"><g id="tR1">${ART.r1}</g><g id="tR2">${ART.r2}</g></g><g id="tProt"><g id="tP1">${ART.p1}</g><g id="tP2">${ART.p2}</g><line id="tPread" class="p-read"/><polyline id="tParc" class="p-read" style="stroke-width:.07;fill:none"/></g><g id="tCompass"></g><g id="tPencil"></g>`;
+const tRuler=document.getElementById("tRuler"),tR1=document.getElementById("tR1"),tR2=document.getElementById("tR2"),tProt=document.getElementById("tProt"),tP1=document.getElementById("tP1"),tP2=document.getElementById("tP2"),tPread=document.getElementById("tPread"),tParc=document.getElementById("tParc"),tCompass=document.getElementById("tCompass"),tPencil=document.getElementById("tPencil");
+const P2=p=>`${n3(p.x)},${n3(-p.y)}`;
+function quad(a,b,wa,wb){const u=mul(sub(b,a),1/dist(a,b)),n=V(-u.y,u.x);return [add(a,mul(n,wa)),add(b,mul(n,wb)),add(b,mul(n,-wb)),add(a,mul(n,-wa))].map(P2).join(" ");}
+function compassArt(c){const N=V(c.x,c.y),r=Math.max(.05,c.r),P=polar(N,r,c.ang),L=6.6,h=Math.sqrt(Math.max(.5,L*L-(r/2)*(r/2)));
+  const M=add(N,mul(sub(P,N),.5)),u=mul(sub(P,N),1/r),n=mul(V(-u.y,u.x),c.hs||1),H=add(M,mul(n,h));
+  const Hn=add(H,mul(sub(N,H),.06)),Hp=add(H,mul(sub(P,H),.06));const needleTop=add(N,mul(sub(H,N),.12));
+  const clamp=add(P,mul(sub(H,P),.42)),pencilTop=add(P,mul(sub(H,P),.62)),cone=add(P,mul(sub(H,P),.07)),leadEnd=add(P,mul(sub(H,P),.022));
+  const hd=add(H,mul(n,.95));
+  let s=`<g opacity="${c.o}">`;
+  s+=`<polygon class="pencil" points="${quad(pencilTop,cone,.17,.17)}"/><polygon class="wood" points="${quad(cone,leadEnd,.17,.05)}"/><polygon class="lead" points="${quad(leadEnd,P,.05,.005)}"/>`;
+  s+=`<polygon class="metal" points="${quad(Hp,clamp,.2,.13)}"/><polygon class="metal" points="${quad(add(clamp,mul(sub(H,P),-.02)),add(clamp,mul(sub(H,P),.05)),.3,.3)}"/>`;
+  s+=`<polygon class="metal" points="${quad(Hn,needleTop,.2,.1)}"/><line class="needle" x1="${n3(needleTop.x)}" y1="${n3(-needleTop.y)}" x2="${n3(N.x)}" y2="${n3(-N.y)}"/>`;
+  s+=`<polygon class="metal" points="${quad(H,hd,.13,.1)}"/><circle class="metal" cx="${n3(H.x)}" cy="${n3(-H.y)}" r=".36"/><circle cx="${n3(H.x)}" cy="${n3(-H.y)}" r=".1" fill="var(--metal-dark)"/>`;
+  s+=`<circle class="tip-dot" cx="${n3(N.x)}" cy="${n3(-N.y)}" r=".05"/></g>`;return s;}
+function pencilArt(p){const tip=V(p.x,p.y),d=polar(V(0,0),1,62);const a=add(tip,mul(d,.18)),b=add(tip,mul(d,.75)),c=add(tip,mul(d,6)),e=add(tip,mul(d,6.6));
+  return `<g opacity="${p.o}"><polygon class="lead" points="${quad(tip,a,.004,.06)}"/><polygon class="wood" points="${quad(a,b,.06,.2)}"/><polygon class="pencil" points="${quad(b,c,.2,.2)}"/><polygon class="eraser" points="${quad(c,e,.2,.2)}"/></g>`;}
+function renderTools(S){const r=S.tools.ruler;tRuler.setAttribute("opacity",r.o);tRuler.setAttribute("transform",`translate(${n3(r.x)},${n3(-r.y)}) rotate(${n3(-r.ang)})`);tR1.style.display=r.side===1?"":"none";tR2.style.display=r.side===1?"none":"";
+  const p=S.tools.prot;tProt.setAttribute("opacity",p.o);tProt.setAttribute("transform",`translate(${n3(p.x)},${n3(-p.y)}) rotate(${n3(-p.ang)})`);tP1.style.display=p.flip===1?"":"none";tP2.style.display=p.flip===1?"none":"";
+  if(p.read!=null){const a=p.read*D2R;tPread.setAttribute("x1",n3(5.05*Math.cos(a)));tPread.setAttribute("y1",n3(-p.flip*5.05*Math.sin(a)));tPread.setAttribute("x2",n3(5.6*Math.cos(a)));tPread.setAttribute("y2",n3(-p.flip*5.6*Math.sin(a)));tPread.style.display="";
+    const st=p.r0??0,n=Math.max(2,Math.ceil(Math.abs(p.read-st)/2));let q="";for(let i=0;i<=n;i++){const b=lerp(st,p.read,i/n)*D2R;q+=`${n3(5.2*Math.cos(b))},${n3(-p.flip*5.2*Math.sin(b))} `;}tParc.setAttribute("points",q);tParc.style.display="";}
+  else{tPread.style.display="none";tParc.style.display="none";}
+  tCompass.innerHTML=S.tools.compass.o>0.01?compassArt(S.tools.compass):"";
+  tPencil.innerHTML=S.tools.pencil.o>0.01?pencilArt(S.tools.pencil):"";}
+const MAGR=1.75,MAGK=3.2;
+function renderMag(S){const m=S.mag;if(m.o<0.01||!showMag.checked){gMag.innerHTML="";return;}
+  let px=m.px,py=m.py,text=m.text;
+  if(m.follow==="compass"){const c=S.tools.compass;const q=polar(V(c.x,c.y),c.r,c.ang);px=q.x;py=q.y;text=`${f1(c.r)} cm`;}
+  let off=m.off;if(!off){const r=S.tools.ruler;if(r.o>0.5){const n=V(-Math.sin(r.ang*D2R),Math.cos(r.ang*D2R)),u=V(Math.cos(r.ang*D2R),Math.sin(r.ang*D2R));off=add(mul(n,-r.side*2.7),mul(u,.5));}else off=V(2.4,2.6);}let mx=px+off.x,my=py+off.y;
+  mx=Math.min(Math.max(mx,VB.x0+MAGR+.2),VB.x1-MAGR-.2);my=Math.min(Math.max(my,VB.y0+MAGR+.9),VB.y1-MAGR-.2);
+  const dd=Math.hypot(mx-px,my-py),ex=mx-(mx-px)*MAGR/Math.max(dd,.01),ey=my-(my-py)*MAGR/Math.max(dd,.01);
+  document.getElementById("magclipc").setAttribute("cx",n3(mx));document.getElementById("magclipc").setAttribute("cy",n3(-my));
+  const tw=Math.max(1.6,text.length*.27+.5);
+  gMag.innerHTML=`<g opacity="${m.o}">${dd>MAGR?`<line class="mag-lead" x1="${n3(px)}" y1="${n3(-py)}" x2="${n3(ex)}" y2="${n3(-ey)}"/>`:""}<circle cx="${n3(px)}" cy="${n3(-py)}" r=".16" fill="none" stroke="var(--mag-ring)" stroke-width=".03"/>
+   <g clip-path="url(#magclip)"><circle class="mag-bg" cx="${n3(mx)}" cy="${n3(-my)}" r="${MAGR}"/><use href="#world" transform="translate(${n3(mx)},${n3(-my)}) scale(${MAGK}) translate(${n3(-px)},${n3(py)})"/>
+   <line x1="${n3(mx)}" y1="${n3(-my-MAGR)}" x2="${n3(mx)}" y2="${n3(-my+MAGR)}" stroke="var(--res)" stroke-width=".018" stroke-dasharray=".08 .08" opacity=".7"/></g>
+   <circle class="mag-ring" cx="${n3(mx)}" cy="${n3(-my)}" r="${MAGR}"/>
+   <rect class="mag-tag" x="${n3(mx-tw/2)}" y="${n3(-my+MAGR-.15)}" width="${n3(tw)}" height=".62" rx=".31"/><text class="mag-txt" x="${n3(mx)}" y="${n3(-my+MAGR+.16)}">${text}</text></g>`;}
+function render(S){renderEls(S);renderTools(S);renderMag(S);}
+
+/* ================= player ================= */
+const SPEEDS=[.25,.5,.75,1,1.5,2,3];
+const $=id=>document.getElementById(id);
+const showMag=$("showMag"),pauseEach=$("pauseEach"),speedIn=$("speed");
+let cur=null,steps=[],S=newScene(),si=0,ai=0,el=0,started=false,playing=false,last=0,finished=false;
+function zoneOf(c){return V(c.view[0]+0.6,c.view[2]+3.4);}
+function buildC(c){CTX={zone:zoneOf(c),centre:c.centre};const st=c.build();return st;}
+function instant(a){a.init(S);a.upd(S,1);}
+function goto(k,play){k=Math.max(0,Math.min(k,steps.length));S=newScene();CTX={zone:zoneOf(cur),centre:cur.centre};
+  for(let i=0;i<k;i++)for(const a of steps[i].a)instant(a);
+  si=k;ai=0;el=0;started=false;finished=k>=steps.length;S.say=finished?"Construction complete. Leave all your arcs showing.":"";
+  render(S);ui();setPlaying(!!play&&!finished);}
+function setPlaying(p){playing=p;$("bPlay").innerHTML=p?`<svg viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>Pause`:`<svg viewBox="0 0 16 16"><path d="M3 2v12l11-6z"/></svg>${finished?"Replay":si===0&&ai===0&&!started?"Play":"Play"}`;}
+function ui(){const st=steps[Math.min(si,steps.length-1)];
+  $("stepno").textContent=finished?`All ${steps.length} steps done`:`Step ${si+1} of ${steps.length}`;
+  $("steptext").textContent=finished?"Construction complete.":st.t;
+  $("now").textContent=S.say||(finished?"Construction complete. Leave every arc showing, and measure to check.":playing?"…":"Press Play to watch this step.");
+  [...$("steps").children].forEach((li,i)=>{li.className=finished||i<si?"past":i===si?"cur":"";});
+  $("badge").textContent=finished?"Finished":`Step ${si+1} / ${steps.length}`;}
+function frame(ts){const dt=last?Math.min(64,ts-last):16;last=ts;
+  if(playing&&!finished){let budget=dt*SPEEDS[+speedIn.value];
+    while(budget>0&&playing){const a=steps[si].a[ai];
+      if(!a){si++;ai=0;el=0;started=false;if(si>=steps.length){finished=true;S.say="Construction complete. Leave all your arcs and construction lines showing.";setPlaying(false);break;}
+        if(pauseEach.checked){S.say="Step done. Press Play or Next step to continue.";setPlaying(false);break;}continue;}
+      if(!started){a.init(S);started=true;if(a.say)S.say=a.say;}
+      const need=a.dur-el;const use=Math.min(need,budget);el+=use;budget-=use;
+      const t=Math.min(1,el/a.dur);a.upd(S,a.lin?t:ease(t));
+      if(el>=a.dur-1e-6){ai++;el=0;started=false;}}
+    render(S);ui();}
+  requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+
+function load(id,play){const c=LIB.find(x=>x.id===id)||LIB[0];cur=c;steps=buildC(c);setView(c.view);
+  $("kicker").textContent=c.cat==="Measuring skills"?`Measuring skills · ${c.num}`:c.cat==="Exam practice"?`Exam practice · Question ${c.num.slice(1)}`:`${c.cat} · Construction ${c.num}`;
+  $("ctitle").textContent=c.title;$("keyidea").textContent=c.key;
+  $("turnq").textContent=c.turn.q;$("turnchk").textContent="Check: "+c.turn.chk;$("ans").hidden=true;$("ans").textContent=c.turn.ans();$("bAns").textContent="Show expected answer";
+  $("turnhead").textContent=c.cat==="Exam practice"?"Your turn · on paper":c.cat==="Measuring skills"?"Your turn · practise the skill":"Your turn · ruler, pencil and compasses only";
+  const ol=$("steps");ol.innerHTML="";steps.forEach((s,i)=>{const li=document.createElement("li");const b=document.createElement("button");b.innerHTML=`<span class="num">${i+1}</span><span></span>`;b.lastChild.textContent=s.t;b.onclick=()=>goto(i,true);li.appendChild(b);ol.appendChild(li);});
+  document.querySelectorAll("#menu button").forEach(b=>b.setAttribute("aria-current",b.dataset.id===c.id?"true":"false"));
+  try{history.replaceState(null,"","#"+c.id);}catch(e){}
+  goto(0,!!play);}
+
+/* menu */
+(function(){const m=$("menu");let lastCat="";for(const c of LIB){if(c.cat!==lastCat){const h=document.createElement("h3");h.textContent=c.cat;m.appendChild(h);lastCat=c.cat;}
+  const b=document.createElement("button");b.dataset.id=c.id;b.innerHTML=`<span class="n">${c.num}</span><span></span>`;b.lastChild.textContent=c.title.replace(/^Exam Practice \d: /,"");b.onclick=()=>{load(c.id,false);if(window.innerWidth<760)$("stage").scrollIntoView({behavior:"smooth"});};m.appendChild(b);}})();
+
+/* controls */
+$("bPlay").onclick=()=>{if(finished){goto(0,true);return;}setPlaying(!playing);if(playing&&S.say.startsWith("Step done"))S.say="";ui();};
+$("bNext").onclick=()=>{if(!finished&&ai===0&&!started&&el===0){setPlaying(true);if(S.say.startsWith("Step done"))S.say="";ui();}else goto(si+1,true);};
+$("bPrev").onclick=()=>{goto((ai===0&&!started&&el===0)||finished?si-1:si,true);};
+$("bRestart").onclick=()=>goto(0,true);
+$("bAns").onclick=()=>{const a=$("ans");a.hidden=!a.hidden;$("bAns").textContent=a.hidden?"Show expected answer":"Hide answer";};
+function speedLabel(){$("speedOut").textContent=SPEEDS[+speedIn.value]+"×";}
+speedIn.oninput=()=>{speedLabel();try{localStorage.setItem("cons.speed",speedIn.value);}catch(e){}};
+pauseEach.onchange=()=>{try{localStorage.setItem("cons.pause",pauseEach.checked?"1":"0");}catch(e){}};
+showMag.onchange=()=>render(S);
+try{const v=localStorage.getItem("cons.speed");if(v!=null)speedIn.value=v;const p=localStorage.getItem("cons.pause");if(p!=null)pauseEach.checked=p==="1";}catch(e){}
+speedLabel();
+document.addEventListener("keydown",e=>{if(e.target.matches("input,textarea"))return;
+  if(e.code==="Space"){e.preventDefault();$("bPlay").click();}else if(e.key==="ArrowRight"){$("bNext").click();}else if(e.key==="ArrowLeft"){$("bPrev").click();}else if(e.key==="r"||e.key==="R"){$("bRestart").click();}});
+const h=(location.hash||"").slice(1);
+load(LIB.some(c=>c.id===h)?h:"c1",false);
+window.__CONS={LIB,load,goto,seek(k,ai_,t){goto(k,false);const st=steps[k];for(let i=0;i<ai_;i++)instant(st.a[i]);const a=st.a[ai_];a.init(S);if(a.say)S.say=a.say;a.upd(S,t);render(S);},get steps(){return steps;},get S(){return S;}};
+})();
+</script>
+</body></html>
